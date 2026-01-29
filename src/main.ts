@@ -291,16 +291,16 @@ export default class CopilotPlugin extends Plugin {
 		const isConnected = this.copilotService?.isConnected() ?? false;
 		this.statusBarEl.empty();
 		
-		const statusEl = this.statusBarEl.createSpan({ cls: "ghcp-status" });
+		const statusEl = this.statusBarEl.createSpan({ cls: "vc-status" });
 		statusEl.setAttribute("aria-label", isConnected ? "Toggle Copilot window" : "Connect to Copilot");
 		
 		// GitHub Copilot logo SVG
-		const logoEl = statusEl.createSpan({ cls: "ghcp-status-logo" });
+		const logoEl = statusEl.createSpan({ cls: "vc-status-logo" });
 		logoEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M7.25 2.5h1.5a4.75 4.75 0 0 1 4.75 4.75v.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-.5a3.25 3.25 0 0 0-3.25-3.25h-1.5a3.25 3.25 0 0 0-3.25 3.25v.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-.5A4.75 4.75 0 0 1 7.25 2.5zm-3 4.25a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zm5.5 0a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zM2 11.5c0-.83.67-1.5 1.5-1.5h9c.83 0 1.5.67 1.5 1.5v1c0 .83-.67 1.5-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1c0 .28.22.5.5.5h9a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-9z"/></svg>`;
 		
 		// Connection status indicator
 		statusEl.createSpan({ 
-			cls: `ghcp-status-indicator ${isConnected ? "ghcp-connected" : "ghcp-disconnected"}` 
+			cls: `vc-status-indicator ${isConnected ? "vc-connected" : "vc-disconnected"}` 
 		});
 	}
 
@@ -350,7 +350,7 @@ export default class CopilotPlugin extends Plugin {
 
 	/**
 	 * Get the public API for other plugins to use
-	 * Usage: const ghcp = (app as any).plugins.plugins['obsidian-ghcp']?.api;
+	 * Usage: const vaultCopilot = (app as any).plugins.plugins['obsidian-vault-copilot']?.api;
 	 */
 	get api(): GhcpAPI {
 		const service = this.copilotService;

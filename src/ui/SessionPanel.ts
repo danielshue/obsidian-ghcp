@@ -73,18 +73,18 @@ export class SessionPanel {
 
 	render(): void {
 		this.containerEl.empty();
-		this.containerEl.addClass("ghcp-session-panel");
+		this.containerEl.addClass("vc-session-panel");
 
 		// Title bar with SESSIONS and toolbar icons
-		const titleBar = this.containerEl.createDiv({ cls: "ghcp-session-titlebar" });
-		titleBar.createSpan({ cls: "ghcp-session-titlebar-text", text: "SESSIONS" });
+		const titleBar = this.containerEl.createDiv({ cls: "vc-session-titlebar" });
+		titleBar.createSpan({ cls: "vc-session-titlebar-text", text: "SESSIONS" });
 		
 		// Toolbar icons (right-justified on the same line)
-		const toolbar = titleBar.createDiv({ cls: "ghcp-session-toolbar" });
+		const toolbar = titleBar.createDiv({ cls: "vc-session-toolbar" });
 		
 		// Refresh button
 		const refreshBtn = toolbar.createEl("button", { 
-			cls: "ghcp-header-btn ghcp-session-toolbar-btn",
+			cls: "vc-header-btn vc-session-toolbar-btn",
 			attr: { "aria-label": "Refresh" }
 		});
 		setIcon(refreshBtn, "refresh-cw");
@@ -92,7 +92,7 @@ export class SessionPanel {
 		
 		// Search button
 		const searchBtn = toolbar.createEl("button", { 
-			cls: "ghcp-header-btn ghcp-session-toolbar-btn",
+			cls: "vc-header-btn vc-session-toolbar-btn",
 			attr: { "aria-label": "Search" }
 		});
 		setIcon(searchBtn, "search");
@@ -100,7 +100,7 @@ export class SessionPanel {
 		
 		// Filter button
 		const filterBtn = toolbar.createEl("button", { 
-			cls: "ghcp-header-btn ghcp-session-toolbar-btn",
+			cls: "vc-header-btn vc-session-toolbar-btn",
 			attr: { "aria-label": "Filter" }
 		});
 		setIcon(filterBtn, "filter");
@@ -108,7 +108,7 @@ export class SessionPanel {
 		
 		// Close panel button
 		const closeBtn = toolbar.createEl("button", { 
-			cls: "ghcp-header-btn ghcp-session-toolbar-btn",
+			cls: "vc-header-btn vc-session-toolbar-btn",
 			attr: { "aria-label": "Close" }
 		});
 		// Match the working expand-session icon
@@ -118,9 +118,9 @@ export class SessionPanel {
 		});
 
 		// Search bar (hidden by default)
-		const searchBar = this.containerEl.createDiv({ cls: "ghcp-session-search-bar ghcp-hidden" });
+		const searchBar = this.containerEl.createDiv({ cls: "vc-session-search-bar vc-hidden" });
 		const searchInput = searchBar.createEl("input", {
-			cls: "ghcp-session-search-input",
+			cls: "vc-session-search-input",
 			attr: { 
 				type: "text", 
 				placeholder: "Search sessions...",
@@ -133,10 +133,10 @@ export class SessionPanel {
 		});
 
 		// Header with New Session button
-		const header = this.containerEl.createDiv({ cls: "ghcp-session-panel-header" });
+		const header = this.containerEl.createDiv({ cls: "vc-session-panel-header" });
 		
 		const newSessionBtn = header.createEl("button", { 
-			cls: "ghcp-session-new-btn"
+			cls: "vc-session-new-btn"
 		});
 		const plusIcon = newSessionBtn.createSpan();
 		setIcon(plusIcon, "plus");
@@ -144,15 +144,15 @@ export class SessionPanel {
 		newSessionBtn.addEventListener("click", () => this.callbacks.onNewSession());
 
 		// Content area for sessions
-		this.containerEl.createDiv({ cls: "ghcp-session-panel-content" });
+		this.containerEl.createDiv({ cls: "vc-session-panel-content" });
 		this.renderSessionList();
 	}
 
 	private toggleSearch(): void {
-		const searchBar = this.containerEl.querySelector(".ghcp-session-search-bar");
+		const searchBar = this.containerEl.querySelector(".vc-session-search-bar");
 		if (searchBar) {
-			searchBar.classList.toggle("ghcp-hidden");
-			if (!searchBar.classList.contains("ghcp-hidden")) {
+			searchBar.classList.toggle("vc-hidden");
+			if (!searchBar.classList.contains("vc-hidden")) {
 				const input = searchBar.querySelector("input");
 				if (input) input.focus();
 			} else {
@@ -196,7 +196,7 @@ export class SessionPanel {
 	}
 
 	private renderSessionList(): void {
-		const content = this.containerEl.querySelector(".ghcp-session-panel-content");
+		const content = this.containerEl.querySelector(".vc-session-panel-content");
 		if (!content) return;
 		content.empty();
 
@@ -244,26 +244,26 @@ export class SessionPanel {
 
 		// Empty state
 		if (sessions.length === 0) {
-			const emptyState = (content as HTMLElement).createDiv({ cls: "ghcp-session-empty" });
+			const emptyState = (content as HTMLElement).createDiv({ cls: "vc-session-empty" });
 			if (this.searchQuery) {
 				emptyState.createEl("p", { text: "No matching sessions" });
 				emptyState.createEl("p", { 
 					text: "Try a different search term",
-					cls: "ghcp-session-empty-hint"
+					cls: "vc-session-empty-hint"
 				});
 			} else {
 				emptyState.createEl("p", { text: "No chat sessions yet" });
 				emptyState.createEl("p", { 
 					text: "Start a conversation to create your first session",
-					cls: "ghcp-session-empty-hint"
+					cls: "vc-session-empty-hint"
 				});
 			}
 		}
 	}
 
 	private renderSection(container: HTMLElement, title: string, sessions: CopilotSession[]): void {
-		const section = container.createDiv({ cls: "ghcp-session-section" });
-		section.createDiv({ cls: "ghcp-session-section-title", text: title });
+		const section = container.createDiv({ cls: "vc-session-section" });
+		section.createDiv({ cls: "vc-session-section-title", text: title });
 
 		for (const session of sessions) {
 			this.renderSessionItem(section, session, false);
@@ -271,10 +271,10 @@ export class SessionPanel {
 	}
 
 	private renderArchivedSection(container: HTMLElement, sessions: CopilotSession[]): void {
-		const section = container.createDiv({ cls: "ghcp-session-section ghcp-session-archived-section" });
+		const section = container.createDiv({ cls: "vc-session-section vc-session-archived-section" });
 		
-		const header = section.createDiv({ cls: "ghcp-session-section-title ghcp-session-archived-header" });
-		header.innerHTML = `<span class="ghcp-archived-toggle">${this.archivedExpanded ? '▼' : '▶'}</span> ARCHIVED (${sessions.length})`;
+		const header = section.createDiv({ cls: "vc-session-section-title vc-session-archived-header" });
+		header.innerHTML = `<span class="vc-archived-toggle">${this.archivedExpanded ? '▼' : '▶'}</span> ARCHIVED (${sessions.length})`;
 		header.addEventListener("click", () => {
 			this.archivedExpanded = !this.archivedExpanded;
 			this.render();
@@ -288,44 +288,44 @@ export class SessionPanel {
 	}
 
 	private renderSessionItem(container: HTMLElement, session: CopilotSession, isArchived: boolean): void {
-		const item = container.createDiv({ cls: "ghcp-session-item" });
+		const item = container.createDiv({ cls: "vc-session-item" });
 		
 		// Main content (clickable)
-		const mainContent = item.createDiv({ cls: "ghcp-session-item-content" });
+		const mainContent = item.createDiv({ cls: "vc-session-item-content" });
 		mainContent.addEventListener("click", () => this.callbacks.onSessionSelect(session));
 
 		// Icon for archived sessions
 		if (isArchived) {
-			const icon = mainContent.createSpan({ cls: "ghcp-session-item-icon" });
+			const icon = mainContent.createSpan({ cls: "vc-session-item-icon" });
 			setIcon(icon, "archive");
 		}
 
 		// Session name
-		const name = mainContent.createDiv({ cls: "ghcp-session-item-name" });
+		const name = mainContent.createDiv({ cls: "vc-session-item-name" });
 		name.setText(session.name);
 
 		// Meta info (time ago, duration)
-		const meta = mainContent.createDiv({ cls: "ghcp-session-item-meta" });
+		const meta = mainContent.createDiv({ cls: "vc-session-item-meta" });
 		
 		if (session.durationMs) {
 			meta.createSpan({ 
-				cls: "ghcp-session-duration",
+				cls: "vc-session-duration",
 				text: `Completed in ${formatDuration(session.durationMs)}.`
 			});
 		}
 		
 		meta.createSpan({ 
-			cls: "ghcp-session-time",
+			cls: "vc-session-time",
 			text: formatTimeAgo(session.lastUsedAt)
 		});
 
 		// Actions
-		const actions = item.createDiv({ cls: "ghcp-session-item-actions" });
+		const actions = item.createDiv({ cls: "vc-session-item-actions" });
 		
 		if (isArchived) {
 			// Unarchive button
 			const unarchiveBtn = actions.createEl("button", { 
-				cls: "ghcp-session-action-btn",
+				cls: "vc-session-action-btn",
 				attr: { "aria-label": "Unarchive" }
 			});
 			setIcon(unarchiveBtn, "archive-restore");
@@ -336,7 +336,7 @@ export class SessionPanel {
 		} else {
 			// Archive button
 			const archiveBtn = actions.createEl("button", { 
-				cls: "ghcp-session-action-btn",
+				cls: "vc-session-action-btn",
 				attr: { "aria-label": "Archive" }
 			});
 			setIcon(archiveBtn, "archive");
@@ -452,23 +452,23 @@ export class SessionPanel {
 	async renameSession(session: CopilotSession): Promise<void> {
 		// Create a simple input modal
 		const modal = document.createElement("div");
-		modal.className = "ghcp-rename-modal";
+		modal.className = "vc-rename-modal";
 		modal.innerHTML = `
-			<div class="ghcp-rename-modal-content">
+			<div class="vc-rename-modal-content">
 				<h3>Rename Session</h3>
-				<input type="text" class="ghcp-rename-input" value="${session.name}" />
-				<div class="ghcp-rename-buttons">
-					<button class="ghcp-btn-secondary ghcp-rename-cancel">Cancel</button>
-					<button class="ghcp-btn-primary ghcp-rename-save">Save</button>
+				<input type="text" class="vc-rename-input" value="${session.name}" />
+				<div class="vc-rename-buttons">
+					<button class="vc-btn-secondary vc-rename-cancel">Cancel</button>
+					<button class="vc-btn-primary vc-rename-save">Save</button>
 				</div>
 			</div>
 		`;
 		
 		document.body.appendChild(modal);
 		
-		const input = modal.querySelector(".ghcp-rename-input") as HTMLInputElement;
-		const cancelBtn = modal.querySelector(".ghcp-rename-cancel") as HTMLButtonElement;
-		const saveBtn = modal.querySelector(".ghcp-rename-save") as HTMLButtonElement;
+		const input = modal.querySelector(".vc-rename-input") as HTMLInputElement;
+		const cancelBtn = modal.querySelector(".vc-rename-cancel") as HTMLButtonElement;
+		const saveBtn = modal.querySelector(".vc-rename-save") as HTMLButtonElement;
 		
 		input.focus();
 		input.select();

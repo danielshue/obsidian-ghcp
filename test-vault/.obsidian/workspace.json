@@ -81,38 +81,38 @@
     "type": "split",
     "children": [
       {
-        "id": "0fa5bcbe4e38f626",
+        "id": "96096c4f39365130",
         "type": "tabs",
         "children": [
           {
-            "id": "71fad284d7406b46",
+            "id": "71bf5daed2457574",
             "type": "leaf",
             "state": {
               "type": "copilot-chat-view",
               "state": {},
               "icon": "message-square",
-              "title": "GitHub Copilot for Obsidian"
+              "title": "Vault Copilot"
             }
           }
         ]
       }
     ],
     "direction": "horizontal",
-    "width": 645.5
+    "width": 676.5
   },
   "left-ribbon": {
     "hiddenItems": {
+      "obsidian-vault-copilot:Open GitHub Copilot for Obsidian": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false,
-      "obsidian-ghcp:Open GitHub Copilot for Obsidian": false
+      "bases:Create new base": false
     }
   },
-  "active": "71fad284d7406b46",
+  "active": "71bf5daed2457574",
   "lastOpenFiles": [
     "Daily Notes/2026-01-28.md",
     "Projects/Project Alpha.md",

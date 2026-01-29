@@ -21,7 +21,7 @@ const SLASH_COMMANDS: SlashCommand[] = [
 		usage: "/help",
 		handler: async () => {
 			const commands = SLASH_COMMANDS.map(cmd => `**${cmd.usage}** - ${cmd.description}`).join("\n");
-			return `## GitHub Copilot for Obsidian Slash Commands\n\nThese commands are available in the chat:\n\n${commands}\n\n---\n*Tip: You can also ask Copilot questions in natural language.*`;
+			return `## Vault Copilot Slash Commands\n\nThese commands are available in the chat:\n\n${commands}\n\n---\n*Tip: You can also ask Copilot questions in natural language.*`;
 		}
 	},
 	{
@@ -305,7 +305,7 @@ export class CopilotChatView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "GitHub Copilot for Obsidian";
+		return "Vault Copilot";
 	}
 
 	getIcon(): string {
@@ -316,21 +316,21 @@ export class CopilotChatView extends ItemView {
 		const container = this.containerEl.children[1] as HTMLElement;
 		if (!container) return;
 		container.empty();
-		container.addClass("ghcp-chat-container");
+		container.addClass("vc-chat-container");
 
 		// Create a wrapper for the layout (main view + session panel on right)
-		const layoutWrapper = container.createDiv({ cls: "ghcp-layout-wrapper" });
+		const layoutWrapper = container.createDiv({ cls: "vc-layout-wrapper" });
 
 		// Main view wrapper (comes first, on left)
-		this.mainViewEl = layoutWrapper.createDiv({ cls: "ghcp-main-view" });
+		this.mainViewEl = layoutWrapper.createDiv({ cls: "vc-main-view" });
 
 		// Resizer handle (hidden by default, shown when panel visible)
-		this.resizerEl = layoutWrapper.createDiv({ cls: "ghcp-resizer" });
+		this.resizerEl = layoutWrapper.createDiv({ cls: "vc-resizer" });
 		this.resizerEl.style.display = "none";
 		this.setupResizer();
 
 		// Session panel on right (hidden by default)
-		this.sessionPanelEl = layoutWrapper.createDiv({ cls: "ghcp-session-panel-wrapper" });
+		this.sessionPanelEl = layoutWrapper.createDiv({ cls: "vc-session-panel-wrapper" });
 		this.sessionPanelEl.style.display = "none";
 		this.sessionPanel = new SessionPanel(this.plugin, this.sessionPanelEl, {
 			onSessionSelect: (session) => this.loadSession(session),
@@ -339,15 +339,15 @@ export class CopilotChatView extends ItemView {
 		});
 
 		// Header toolbar
-		const header = this.mainViewEl.createDiv({ cls: "ghcp-chat-header" });
+		const header = this.mainViewEl.createDiv({ cls: "vc-chat-header" });
 		
 		// Session name on the left
-		const sessionTitle = header.createDiv({ cls: "ghcp-header-title" });
+		const sessionTitle = header.createDiv({ cls: "vc-header-title" });
 		sessionTitle.setText(this.getCurrentSessionName());
 		
 		// Single session toggle button on the right
 		this.sessionToggleBtnEl = header.createEl("button", {
-			cls: "ghcp-header-btn ghcp-session-toggle-btn",
+			cls: "vc-header-btn vc-session-toggle-btn",
 			attr: { "aria-label": "Toggle sessions" }
 		});
 		// Sidebar/panel toggle icon
@@ -355,37 +355,37 @@ export class CopilotChatView extends ItemView {
 		this.sessionToggleBtnEl.addEventListener("click", () => this.toggleSessionPanel());
 
 		// Messages container
-		this.messagesContainer = this.mainViewEl.createDiv({ cls: "ghcp-messages" });
+		this.messagesContainer = this.mainViewEl.createDiv({ cls: "vc-messages" });
 
 		// Input area
-		const inputArea = this.mainViewEl.createDiv({ cls: "ghcp-input-area" });
+		const inputArea = this.mainViewEl.createDiv({ cls: "vc-input-area" });
 		
 		// Attachments display area (above the input box)
-		this.attachmentsContainer = inputArea.createDiv({ cls: "ghcp-attachments" });
+		this.attachmentsContainer = inputArea.createDiv({ cls: "vc-attachments" });
 		this.attachmentsContainer.style.display = "none";
-		this.attachmentsContainer.removeClass("ghcp-has-attachments");
+		this.attachmentsContainer.removeClass("vc-has-attachments");
 
 		// Main input wrapper (the box)
-		const inputWrapper = inputArea.createDiv({ cls: "ghcp-input-wrapper" });
+		const inputWrapper = inputArea.createDiv({ cls: "vc-input-wrapper" });
 		
 		// Textarea that grows with content
 		this.inputEl = inputWrapper.createEl("textarea", {
-			cls: "ghcp-input",
+			cls: "vc-input",
 			attr: { 
-				placeholder: "Ask GitHub Copilot anything or command",
+				placeholder: "Ask Vault Copilot anything or command",
 				rows: "1"
 			}
 		});
 
 		// Bottom toolbar inside the input box
-		const inputToolbar = inputWrapper.createDiv({ cls: "ghcp-input-toolbar" });
+		const inputToolbar = inputWrapper.createDiv({ cls: "vc-input-toolbar" });
 		
 		// Left side icons
-		const toolbarLeft = inputToolbar.createDiv({ cls: "ghcp-toolbar-left" });
+		const toolbarLeft = inputToolbar.createDiv({ cls: "vc-toolbar-left" });
 		
 		// Paperclip button for attaching notes
 		const attachBtn = toolbarLeft.createEl("button", { 
-			cls: "ghcp-toolbar-btn",
+			cls: "vc-toolbar-btn",
 			attr: { "aria-label": "Attach a note" }
 		});
 		attachBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`;
@@ -393,7 +393,7 @@ export class CopilotChatView extends ItemView {
 
 		// Model selector button
 		const modelSelector = toolbarLeft.createEl("button", { 
-			cls: "ghcp-model-selector",
+			cls: "vc-model-selector",
 			attr: { "aria-label": "Select model" }
 		});
 		const updateModelSelectorText = () => {
@@ -421,7 +421,7 @@ export class CopilotChatView extends ItemView {
 						item.setChecked(true);
 					}
 					const itemEl = (item as any).dom as HTMLElement;
-					const rateSpan = itemEl.createSpan({ cls: "ghcp-model-rate", text: autoModel.rate });
+					const rateSpan = itemEl.createSpan({ cls: "vc-model-rate", text: autoModel.rate });
 					itemEl.appendChild(rateSpan);
 				});
 			}
@@ -440,7 +440,7 @@ export class CopilotChatView extends ItemView {
 						item.setChecked(true);
 					}
 					const itemEl = (item as any).dom as HTMLElement;
-					const rateSpan = itemEl.createSpan({ cls: "ghcp-model-rate", text: model.rate });
+					const rateSpan = itemEl.createSpan({ cls: "vc-model-rate", text: model.rate });
 					itemEl.appendChild(rateSpan);
 				});
 			});
@@ -449,11 +449,11 @@ export class CopilotChatView extends ItemView {
 		});
 		
 		// Right side icons
-		const toolbarRight = inputToolbar.createDiv({ cls: "ghcp-toolbar-right" });
+		const toolbarRight = inputToolbar.createDiv({ cls: "vc-toolbar-right" });
 		
 		// Voice button (placeholder)
 		const voiceBtn = toolbarRight.createEl("button", { 
-			cls: "ghcp-toolbar-btn",
+			cls: "vc-toolbar-btn",
 			attr: { "aria-label": "Voice input (coming soon)" }
 		});
 		voiceBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>`;
@@ -461,7 +461,7 @@ export class CopilotChatView extends ItemView {
 
 		// Send button
 		this.sendButton = toolbarRight.createEl("button", { 
-			cls: "ghcp-send-btn",
+			cls: "vc-send-btn",
 			attr: { "aria-label": "Send message" }
 		});
 		this.sendButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>`;
@@ -595,7 +595,7 @@ export class CopilotChatView extends ItemView {
 	 * Update the header title with current session name
 	 */
 	private updateHeaderTitle(): void {
-		const titleEl = this.containerEl.querySelector(".ghcp-header-title");
+		const titleEl = this.containerEl.querySelector(".vc-header-title");
 		if (titleEl) {
 			titleEl.setText(this.getCurrentSessionName());
 		}
@@ -717,7 +717,7 @@ export class CopilotChatView extends ItemView {
 		await this.plugin.saveSettings();
 		
 		this.updateHeaderTitle();
-		console.log("[GHCP] Created new session:", newSession.name);
+		console.log("[VC] Created new session:", newSession.name);
 	}
 
 	/**
@@ -772,22 +772,22 @@ export class CopilotChatView extends ItemView {
 		
 		if (this.attachedNotes.length === 0) {
 			this.attachmentsContainer.style.display = "none";
-			this.attachmentsContainer.removeClass("ghcp-has-attachments");
+			this.attachmentsContainer.removeClass("vc-has-attachments");
 			return;
 		}
 		
 		this.attachmentsContainer.style.display = "flex";
-		this.attachmentsContainer.addClass("ghcp-has-attachments");
+		this.attachmentsContainer.addClass("vc-has-attachments");
 		
 		for (const file of this.attachedNotes) {
-			const chip = this.attachmentsContainer.createDiv({ cls: "ghcp-attachment-chip" });
+			const chip = this.attachmentsContainer.createDiv({ cls: "vc-attachment-chip" });
 			
-			const icon = chip.createSpan({ cls: "ghcp-attachment-icon" });
+			const icon = chip.createSpan({ cls: "vc-attachment-icon" });
 			icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
 			
-			chip.createSpan({ text: file.basename, cls: "ghcp-attachment-name" });
+			chip.createSpan({ text: file.basename, cls: "vc-attachment-name" });
 			
-			const removeBtn = chip.createSpan({ cls: "ghcp-attachment-remove" });
+			const removeBtn = chip.createSpan({ cls: "vc-attachment-remove" });
 			removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 			removeBtn.addEventListener("click", () => this.removeAttachment(file));
 		}
@@ -806,54 +806,90 @@ export class CopilotChatView extends ItemView {
 	}
 
 	private addWelcomeMessage(): void {
-		const welcomeEl = this.messagesContainer.createDiv({ cls: "ghcp-welcome" });
-		welcomeEl.createEl("h3", { text: "Welcome to GitHub Copilot for Obsidian" });
-		welcomeEl.createEl("p", { text: "I can help you with your notes in Obsidian. Try asking me to:" });
+		const welcomeEl = this.messagesContainer.createDiv({ cls: "vc-welcome" });
 		
-		// Quick action button
-		const quickAction = welcomeEl.createDiv({ cls: "ghcp-quick-action" });
-		const btn = quickAction.createEl("button", { text: "Summarize the current note", cls: "ghcp-suggestion-btn" });
-		btn.addEventListener("click", () => {
-			this.inputEl.value = "Summarize the current note";
-			this.sendMessage();
-		});
+		// Logo section
+		const logoEl = welcomeEl.createDiv({ cls: "vc-welcome-logo" });
+		logoEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M12 8V4H8"/>
+			<rect width="16" height="12" x="4" y="8" rx="2"/>
+			<path d="M2 14h2"/>
+			<path d="M20 14h2"/>
+			<path d="M15 13v2"/>
+			<path d="M9 13v2"/>
+		</svg>`;
+		
+		// Title
+		welcomeEl.createEl("h2", { text: "Ask Vault Copilot", cls: "vc-welcome-title" });
+		
+		// Disclaimer
+	welcomeEl.createEl("p", { text: "AI can make mistakes, review output carefully. Ask questions, trigger vault operations, and run skills powered by GitHub Copilot.", cls: "vc-welcome-disclaimer" });
+	
+	// Quick action button
+	const quickAction = welcomeEl.createDiv({ cls: "vc-quick-action" });
+	const btn = quickAction.createEl("button", { text: "Summarize the current note", cls: "vc-suggestion-btn" });
+	btn.addEventListener("click", () => {
+		this.inputEl.value = "Summarize the current note";
+		this.sendMessage();
+	});
 
-		// Example questions section
-		const examplesEl = welcomeEl.createDiv({ cls: "ghcp-examples" });
-		examplesEl.createEl("p", { text: "Example questions:", cls: "ghcp-examples-title" });
-		
-		const examplesList = examplesEl.createEl("ul", { cls: "ghcp-examples-list" });
-		const examples = [
-			"What are my action items from yesterday's meeting?",
-			"Find all notes mentioning the project Alpha deadline",
-			"Create a new note for today's standup in Daily Notes",
-			"What connections exist between my machine learning notes?",
-			"Show me notes I've edited in the last week",
-		];
-		
-		for (const example of examples) {
-			examplesList.createEl("li", { text: example });
-		}
-
-		// Slash commands section
-		const commandsEl = welcomeEl.createDiv({ cls: "ghcp-commands" });
-		commandsEl.createEl("p", { text: "Available commands:", cls: "ghcp-commands-title" });
-		
-		const commandsList = commandsEl.createEl("ul", { cls: "ghcp-commands-list" });
-		const commands = [
-			{ cmd: "/search", desc: "Search across all notes" },
-			{ cmd: "/create", desc: "Create a new note" },
-			{ cmd: "/daily", desc: "Open or create today's daily note" },
-			{ cmd: "/recent", desc: "Show recently modified notes" },
-			{ cmd: "/help", desc: "See all available commands" },
-		];
-		
-		for (const { cmd, desc } of commands) {
-			const li = commandsList.createEl("li");
-			li.createEl("code", { text: cmd, cls: "ghcp-command-code" });
-			li.appendText(` — ${desc}`);
-		}
+	// Example questions section
+	const examplesEl = welcomeEl.createDiv({ cls: "vc-examples" });
+	const examplesTitle = examplesEl.createEl("p", { cls: "vc-examples-title" });
+	examplesTitle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>Example questions:`;
+	
+	const examplesList = examplesEl.createEl("ul", { cls: "vc-examples-list" });
+	const examples = [
+		"Summarize this note and propose next steps.",
+		"Create a new note in Research with this outline.",
+		"Find related notes using my machine learning tag.",
+		"Refactor this section to be more concise.",
+		"Generate a monthly summary from recent notes.",
+	];
+	
+	for (const example of examples) {
+		examplesList.createEl("li", { text: example });
 	}
+
+	// Available capabilities section
+	const capabilitiesEl = welcomeEl.createDiv({ cls: "vc-capabilities" });
+	const capabilitiesTitle = capabilitiesEl.createEl("p", { cls: "vc-capabilities-title" });
+	capabilitiesTitle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>Available capabilities:`;
+	
+	const capabilitiesList = capabilitiesEl.createEl("ul", { cls: "vc-capabilities-list" });
+	const capabilities = [
+		"Chat with GitHub Copilot",
+		"Run skills for note operations",
+		"Use MCP tools",
+		"Analyze and transform your notes",
+		"Generate or update content",
+		"Work with your entire vault",
+	];
+	
+	for (const capability of capabilities) {
+		capabilitiesList.createEl("li", { text: capability });
+	}
+
+	// Slash commands section
+	const commandsEl = welcomeEl.createDiv({ cls: "vc-commands" });
+	const commandsTitle = commandsEl.createEl("p", { cls: "vc-commands-title" });
+	commandsTitle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 6px;"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>Available commands:`;
+	
+	const commandsList = commandsEl.createEl("ul", { cls: "vc-commands-list" });
+	const commands = [
+		{ cmd: "/search", desc: "Search across all notes" },
+		{ cmd: "/create", desc: "Create a new note" },
+		{ cmd: "/daily", desc: "Open or create today's daily note" },
+		{ cmd: "/recent", desc: "Show recently modified notes" },
+		{ cmd: "/help", desc: "See all available commands" },
+	];
+	
+	for (const { cmd, desc } of commands) {
+		const li = commandsList.createEl("li");
+		li.createEl("code", { text: cmd, cls: "vc-command-code" });
+		li.appendText(` — ${desc}`);
+	}
+}
 
 	/**
 	 * Execute a tool directly (used by slash commands)
@@ -969,7 +1005,7 @@ export class CopilotChatView extends ItemView {
 		await this.ensureSessionExists();
 
 		// Clear welcome message if present
-		const welcomeEl = this.messagesContainer.querySelector(".ghcp-welcome");
+		const welcomeEl = this.messagesContainer.querySelector(".vc-welcome");
 		if (welcomeEl) {
 			welcomeEl.remove();
 		}
@@ -1031,7 +1067,7 @@ export class CopilotChatView extends ItemView {
 					fullMessage,
 					(delta) => {
 						if (this.currentStreamingMessageEl) {
-							const contentEl = this.currentStreamingMessageEl.querySelector(".ghcp-message-content");
+							const contentEl = this.currentStreamingMessageEl.querySelector(".vc-message-content");
 							if (contentEl) {
 								contentEl.textContent += delta;
 							}
@@ -1056,7 +1092,7 @@ export class CopilotChatView extends ItemView {
 				this.currentStreamingMessageEl = null;
 			}
 		} catch (error) {
-			new Notice(`GitHub Copilot error: ${error}`);
+			new Notice(`Vault Copilot error: ${error}`);
 			if (this.currentStreamingMessageEl) {
 				this.currentStreamingMessageEl.remove();
 				this.currentStreamingMessageEl = null;
@@ -1081,30 +1117,30 @@ export class CopilotChatView extends ItemView {
 		);
 		
 		if (!currentSession) {
-			console.log("[GHCP] No current session found for auto-rename");
+			console.log("[VC] No current session found for auto-rename");
 			return;
 		}
 		
 		// Only rename if this appears to be the default auto-generated name
 		// (starts with "Chat " followed by a time)
 		if (!currentSession.name.startsWith("Chat ")) {
-			console.log("[GHCP] Session already has custom name:", currentSession.name);
+			console.log("[VC] Session already has custom name:", currentSession.name);
 			return;
 		}
 		
 		// Check if this is the first user message by counting user messages
 		const messageHistory = this.copilotService.getMessageHistory();
 		const userMessageCount = messageHistory.filter(m => m.role === "user").length;
-		console.log("[GHCP] User message count:", userMessageCount, "Total messages:", messageHistory.length);
+		console.log("[VC] User message count:", userMessageCount, "Total messages:", messageHistory.length);
 		
 		if (userMessageCount !== 1) {
-			console.log("[GHCP] Not first user message, skipping rename");
+			console.log("[VC] Not first user message, skipping rename");
 			return;
 		}
 		
 		// Generate a concise title from the first message
 		const title = this.generateSessionTitle(firstMessage);
-		console.log("[GHCP] Renaming session to:", title);
+		console.log("[VC] Renaming session to:", title);
 		
 		// Update session name
 		currentSession.name = title;
@@ -1140,20 +1176,20 @@ export class CopilotChatView extends ItemView {
 
 	private createMessageElement(role: "user" | "assistant", content: string): HTMLElement {
 		const messageEl = this.messagesContainer.createDiv({ 
-			cls: `ghcp-message ghcp-message-${role}` 
+			cls: `vc-message vc-message-${role}` 
 		});
 		
-		messageEl.createDiv({ cls: "ghcp-message-content", text: content });
+		messageEl.createDiv({ cls: "vc-message-content", text: content });
 
 		return messageEl;
 	}
 
 	private addCopyButton(messageEl: HTMLElement): void {
-		const contentEl = messageEl.querySelector(".ghcp-message-content");
+		const contentEl = messageEl.querySelector(".vc-message-content");
 		if (!contentEl) return;
 
-		const actionsEl = messageEl.createDiv({ cls: "ghcp-message-actions" });
-		const copyBtn = actionsEl.createEl("button", { cls: "ghcp-copy-btn", attr: { "aria-label": "Copy to clipboard" } });
+		const actionsEl = messageEl.createDiv({ cls: "vc-message-actions" });
+		const copyBtn = actionsEl.createEl("button", { cls: "vc-copy-btn", attr: { "aria-label": "Copy to clipboard" } });
 		copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 		copyBtn.addEventListener("click", async () => {
 			// If text is highlighted, copy only the selection; otherwise copy whole block
@@ -1263,7 +1299,7 @@ export class CopilotChatView extends ItemView {
 	}
 
 	private async renderMarkdownContent(messageEl: HTMLElement, content: string): Promise<void> {
-		const contentEl = messageEl.querySelector(".ghcp-message-content");
+		const contentEl = messageEl.querySelector(".vc-message-content");
 		if (contentEl) {
 			contentEl.empty();
 			await MarkdownRenderer.renderMarkdown(
@@ -1304,7 +1340,7 @@ export class CopilotChatView extends ItemView {
 	}
 
 	private addErrorMessage(error: string): void {
-		const errorEl = this.messagesContainer.createDiv({ cls: "ghcp-error" });
+		const errorEl = this.messagesContainer.createDiv({ cls: "vc-error" });
 		errorEl.createEl("span", { text: `Error: ${error}` });
 	}
 
@@ -1320,7 +1356,7 @@ export class CopilotChatView extends ItemView {
 		try {
 			await this.copilotService.abort();
 			if (this.currentStreamingMessageEl) {
-				const contentEl = this.currentStreamingMessageEl.querySelector(".ghcp-message-content");
+				const contentEl = this.currentStreamingMessageEl.querySelector(".vc-message-content");
 				if (contentEl && contentEl.textContent) {
 					// Keep what was streamed, mark as cancelled
 					contentEl.textContent += "\n\n*[Generation cancelled]*";
@@ -1342,12 +1378,12 @@ export class CopilotChatView extends ItemView {
 		this.inputEl.disabled = this.isProcessing;
 		
 		if (this.isProcessing) {
-			this.sendButton.addClass("ghcp-loading");
+			this.sendButton.addClass("vc-loading");
 			// Change to stop icon
 			this.sendButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><rect x="9" y="9" width="6" height="6"></rect></svg>`;
 			this.sendButton.setAttribute("aria-label", "Stop generation");
 		} else {
-			this.sendButton.removeClass("ghcp-loading");
+			this.sendButton.removeClass("vc-loading");
 			// Change back to send icon
 			this.sendButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>`;
 			this.sendButton.setAttribute("aria-label", "Send message");

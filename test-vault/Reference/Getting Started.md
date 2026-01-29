@@ -8,7 +8,7 @@ This reference guide explains how to use this test vault for plugin development.
 test-vault/
 ├── .obsidian/
 │   └── plugins/
-│       └── obsidian-ghcp/
+│       └── obsidian-vault-copilot/
 ├── Daily Notes/
 ├── Projects/
 ├── Reference/

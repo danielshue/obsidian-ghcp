@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, Notice, FileSystemAdapter, DropdownComponent } from "obsidian";
+import { App, PluginSettingTab, Setting, Notice, FileSystemAdapter } from "obsidian";
 import CopilotPlugin from "./main";
 import { CliManager, CliStatus } from "./copilot/CliManager";
 import { ChatMessage } from "./copilot/CopilotService";
@@ -81,7 +81,7 @@ export class CopilotSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.addClass("ghcp-settings");
+		containerEl.addClass("vc-settings");
 
 		// Header with branding
 		this.renderHeader(containerEl);
@@ -90,10 +90,7 @@ export class CopilotSettingTab extends PluginSettingTab {
 		this.renderCliStatusSection(containerEl);
 
 		// Main settings container - will be populated after status check
-		this.mainSettingsContainer = containerEl.createDiv({ cls: "ghcp-main-settings" });
-
-		// Session Management Section
-		this.renderSessionSection(containerEl);
+		this.mainSettingsContainer = containerEl.createDiv({ cls: "vc-main-settings" });
 
 		// Advanced Settings (always visible)
 		this.renderAdvancedSettings(containerEl);
@@ -106,46 +103,46 @@ export class CopilotSettingTab extends PluginSettingTab {
 	}
 
 	private renderHeader(containerEl: HTMLElement): void {
-		const header = containerEl.createDiv({ cls: "ghcp-settings-header" });
+		const header = containerEl.createDiv({ cls: "vc-settings-header" });
 		
-		const titleRow = header.createDiv({ cls: "ghcp-settings-title-row" });
+		const titleRow = header.createDiv({ cls: "vc-settings-title-row" });
 		
 		// Copilot robot logo
-		const logoWrapper = titleRow.createDiv({ cls: "ghcp-settings-logo" });
+		const logoWrapper = titleRow.createDiv({ cls: "vc-settings-logo" });
 		const logoImg = logoWrapper.createEl("img", {
 			attr: {
 				src: COPILOT_LOGO_DATA_URL,
-				alt: "GitHub Copilot for Obsidian",
+				alt: "Vault Copilot",
 				width: "48",
 				height: "48"
 			}
 		});
 		
-		const titleText = titleRow.createDiv({ cls: "ghcp-settings-title-text" });
-		titleText.createEl("h2", { text: "GitHub Copilot for Obsidian" });
-		titleText.createEl("p", { text: "AI-powered assistant for your notes", cls: "ghcp-settings-subtitle" });
+		const titleText = titleRow.createDiv({ cls: "vc-settings-title-text" });
+		titleText.createEl("h2", { text: "Vault Copilot" });
+		titleText.createEl("p", { text: "AI assistance for your entire vault powered by GitHub Copilot CLI, skills, and extensible tools.", cls: "vc-settings-subtitle" });
 	}
 
 	private renderCliStatusSection(containerEl: HTMLElement): void {
-		const section = containerEl.createDiv({ cls: "ghcp-settings-section" });
+		const section = containerEl.createDiv({ cls: "vc-settings-section" });
 		
-		const sectionHeader = section.createDiv({ cls: "ghcp-section-header" });
+		const sectionHeader = section.createDiv({ cls: "vc-section-header" });
 		sectionHeader.createEl("h3", { text: "Connection Status" });
 		
 		const refreshBtn = sectionHeader.createEl("button", { 
-			cls: "ghcp-refresh-btn",
+			cls: "vc-refresh-btn",
 			attr: { "aria-label": "Refresh status" }
 		});
 		refreshBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>`;
 		refreshBtn.addEventListener("click", () => {
-			refreshBtn.addClass("ghcp-spinning");
+			refreshBtn.addClass("vc-spinning");
 			this.cliManager.invalidateCache();
 			this.checkStatusAsync().finally(() => {
-				refreshBtn.removeClass("ghcp-spinning");
+				refreshBtn.removeClass("vc-spinning");
 			});
 		});
 		
-		this.statusContainer = section.createDiv({ cls: "ghcp-status-card" });
+		this.statusContainer = section.createDiv({ cls: "vc-status-card" });
 		
 		// Show loading state immediately
 		this.renderLoadingStatus();
@@ -155,9 +152,9 @@ export class CopilotSettingTab extends PluginSettingTab {
 		if (!this.statusContainer) return;
 		this.statusContainer.empty();
 		
-		const loadingEl = this.statusContainer.createDiv({ cls: "ghcp-status-loading" });
+		const loadingEl = this.statusContainer.createDiv({ cls: "vc-status-loading" });
 		loadingEl.innerHTML = `
-			<div class="ghcp-spinner"></div>
+			<div class="vc-spinner"></div>
 			<span>Checking connection...</span>
 		`;
 	}
@@ -177,10 +174,10 @@ export class CopilotSettingTab extends PluginSettingTab {
 		if (!this.statusContainer) return;
 		this.statusContainer.empty();
 
-		const statusGrid = this.statusContainer.createDiv({ cls: "ghcp-status-grid" });
+		const statusGrid = this.statusContainer.createDiv({ cls: "vc-status-grid" });
 
 		// CLI Installation Status
-		const cliCard = statusGrid.createDiv({ cls: "ghcp-status-item" });
+		const cliCard = statusGrid.createDiv({ cls: "vc-status-item" });
 		this.renderStatusCard(cliCard, {
 			label: "CLI Installation",
 			isOk: status.installed,
@@ -200,46 +197,46 @@ export class CopilotSettingTab extends PluginSettingTab {
 	}
 
 	private renderStatusCard(container: HTMLElement, opts: { label: string; isOk: boolean; detail: string; icon: string }): void {
-		container.addClass(opts.isOk ? "ghcp-status-ok" : "ghcp-status-error");
+		container.addClass(opts.isOk ? "vc-status-ok" : "vc-status-error");
 		
-		const iconEl = container.createDiv({ cls: "ghcp-status-icon" });
+		const iconEl = container.createDiv({ cls: "vc-status-icon" });
 		iconEl.innerHTML = opts.icon;
 		
-		const textEl = container.createDiv({ cls: "ghcp-status-text" });
-		textEl.createEl("span", { text: opts.label, cls: "ghcp-status-label" });
-		textEl.createEl("span", { text: opts.detail, cls: "ghcp-status-detail" });
+		const textEl = container.createDiv({ cls: "vc-status-text" });
+		textEl.createEl("span", { text: opts.label, cls: "vc-status-label" });
+		textEl.createEl("span", { text: opts.detail, cls: "vc-status-detail" });
 	}
 
 	private renderStatusError(error: string): void {
 		if (!this.statusContainer) return;
 		this.statusContainer.empty();
 		
-		const errorEl = this.statusContainer.createDiv({ cls: "ghcp-status-error-msg" });
+		const errorEl = this.statusContainer.createDiv({ cls: "vc-status-error-msg" });
 		errorEl.createEl("span", { text: `Error checking status: ${error}` });
 	}
 
 	private renderInstallActions(container: HTMLElement): void {
-		const actionsEl = container.createDiv({ cls: "ghcp-status-actions" });
+		const actionsEl = container.createDiv({ cls: "vc-status-actions" });
 		
 		const installInfo = this.cliManager.getInstallCommand();
 		
 		// Command display
-		const cmdGroup = actionsEl.createDiv({ cls: "ghcp-cmd-group" });
+		const cmdGroup = actionsEl.createDiv({ cls: "vc-cmd-group" });
 		cmdGroup.createEl("label", { text: installInfo.description });
 		
-		const cmdRow = cmdGroup.createDiv({ cls: "ghcp-cmd-row" });
+		const cmdRow = cmdGroup.createDiv({ cls: "vc-cmd-row" });
 		cmdRow.createEl("code", { text: installInfo.command });
 		
-		const copyBtn = cmdRow.createEl("button", { text: "Copy", cls: "ghcp-btn-secondary ghcp-btn-sm" });
+		const copyBtn = cmdRow.createEl("button", { text: "Copy", cls: "vc-btn-secondary vc-btn-sm" });
 		copyBtn.addEventListener("click", () => {
 			navigator.clipboard.writeText(installInfo.command);
 			new Notice("Copied to clipboard");
 		});
 
 		// Action buttons
-		const btnRow = actionsEl.createDiv({ cls: "ghcp-btn-row" });
+		const btnRow = actionsEl.createDiv({ cls: "vc-btn-row" });
 		
-		const installBtn = btnRow.createEl("button", { text: "Install Automatically", cls: "ghcp-btn-primary" });
+		const installBtn = btnRow.createEl("button", { text: "Install Automatically", cls: "vc-btn-primary" });
 		installBtn.addEventListener("click", async () => {
 			installBtn.disabled = true;
 			installBtn.textContent = "Installing...";
@@ -252,22 +249,22 @@ export class CopilotSettingTab extends PluginSettingTab {
 			installBtn.textContent = "Install Automatically";
 		});
 
-		const docsLink = btnRow.createEl("a", { text: "View Guide", cls: "ghcp-btn-link", href: installInfo.url });
+		const docsLink = btnRow.createEl("a", { text: "View Guide", cls: "vc-btn-link", href: installInfo.url });
 		docsLink.setAttr("target", "_blank");
 	}
 
 	private renderAuthNote(container: HTMLElement): void {
-		const noteEl = container.createDiv({ cls: "ghcp-auth-note" });
+		const noteEl = container.createDiv({ cls: "vc-auth-note" });
 		noteEl.createEl("p", { 
 			text: "Authentication is handled automatically when you first use GitHub Copilot. If prompted, use the /login command in the CLI.",
-			cls: "ghcp-status-desc"
+			cls: "vc-status-desc"
 		});
 
 		// Expandable PAT info
-		const detailsEl = noteEl.createEl("details", { cls: "ghcp-auth-details" });
+		const detailsEl = noteEl.createEl("details", { cls: "vc-auth-details" });
 		detailsEl.createEl("summary", { text: "Alternative: Use Personal Access Token" });
 		
-		const patContent = detailsEl.createDiv({ cls: "ghcp-pat-content" });
+		const patContent = detailsEl.createDiv({ cls: "vc-pat-content" });
 		patContent.innerHTML = `
 			<ol>
 				<li>Visit <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">GitHub PAT Settings</a></li>
@@ -287,16 +284,16 @@ export class CopilotSettingTab extends PluginSettingTab {
 		}
 
 		// Vault Initialization Section
-		const initSection = this.mainSettingsContainer.createDiv({ cls: "ghcp-settings-section" });
+		const initSection = this.mainSettingsContainer.createDiv({ cls: "vc-settings-section" });
 		initSection.createEl("h3", { text: "Vault Setup" });
 		
 		const initDesc = initSection.createEl("p", { 
 			text: "Initialize GitHub Copilot for this vault to enable context-aware assistance.",
-			cls: "ghcp-status-desc"
+			cls: "vc-status-desc"
 		});
 		
-		const initBtnRow = initSection.createDiv({ cls: "ghcp-btn-row" });
-		const initBtn = initBtnRow.createEl("button", { text: "Initialize Vault", cls: "ghcp-btn-primary" });
+		const initBtnRow = initSection.createDiv({ cls: "vc-btn-row" });
+		const initBtn = initBtnRow.createEl("button", { text: "Initialize Vault", cls: "vc-btn-primary" });
 		initBtn.addEventListener("click", async () => {
 			const vaultPath = this.getVaultPath();
 			if (!vaultPath) {
@@ -310,14 +307,14 @@ export class CopilotSettingTab extends PluginSettingTab {
 			initBtn.textContent = "Initialize Vault";
 		});
 		
-		const cmdPreview = initSection.createDiv({ cls: "ghcp-cmd-group" });
+		const cmdPreview = initSection.createDiv({ cls: "vc-cmd-group" });
 		cmdPreview.createEl("label", { text: "Command that will be run:" });
 		const vaultPath = this.getVaultPath() || "<vault_path>";
 		const normalizedPath = vaultPath.replace(/\\/g, "/");
-		cmdPreview.createEl("code", { text: `copilot --add-dir "${normalizedPath}"`, cls: "ghcp-code-block" });
+		cmdPreview.createEl("code", { text: `copilot --add-dir "${normalizedPath}"`, cls: "vc-code-block" });
 
 		// Chat Preferences Section
-		const section = this.mainSettingsContainer.createDiv({ cls: "ghcp-settings-section" });
+		const section = this.mainSettingsContainer.createDiv({ cls: "vc-settings-section" });
 		section.createEl("h3", { text: "Chat Preferences" });
 
 		// Model selection
@@ -335,19 +332,6 @@ export class CopilotSettingTab extends PluginSettingTab {
 				});
 			});
 
-		// Streaming toggle
-		new Setting(section)
-			.setName("Stream Responses")
-			.setDesc("Display responses as they're generated for a more interactive experience")
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.streaming)
-					.onChange(async (value) => {
-						this.plugin.settings.streaming = value;
-						await this.plugin.saveSettings();
-					})
-			);
-
 		// Status bar toggle
 		new Setting(section)
 			.setName("Status Bar Indicator")
@@ -363,103 +347,13 @@ export class CopilotSettingTab extends PluginSettingTab {
 			);
 	}
 
-	private renderSessionSection(containerEl: HTMLElement): void {
-		const section = containerEl.createDiv({ cls: "ghcp-settings-section" });
-		section.createEl("h3", { text: "Session Management" });
-
-		const sessions = this.plugin.settings.sessions;
-		
-		// Session selector
-		const sessionSetting = new Setting(section)
-			.setName("Resume Session")
-			.setDesc("Continue a previous conversation");
-
-		let sessionDropdown: DropdownComponent;
-		
-		sessionSetting.addDropdown((dropdown) => {
-			sessionDropdown = dropdown;
-			dropdown.addOption("", "— New Session —");
-			
-			// Sort sessions by last used (most recent first)
-			const sortedSessions = [...sessions].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
-			
-			for (const session of sortedSessions) {
-				const date = new Date(session.lastUsedAt).toLocaleDateString();
-				dropdown.addOption(session.id, `${session.name} (${date})`);
-			}
-			
-			dropdown.setValue(this.plugin.settings.activeSessionId || "");
-			dropdown.onChange(async (value) => {
-				this.plugin.settings.activeSessionId = value || null;
-				await this.plugin.saveSettings();
-			});
-		});
-
-		sessionSetting.addButton((btn) =>
-			btn
-				.setButtonText("Attach")
-				.setCta()
-				.onClick(async () => {
-					const sessionId = this.plugin.settings.activeSessionId;
-					if (sessionId) {
-						const session = sessions.find(s => s.id === sessionId);
-						if (session) {
-							session.lastUsedAt = Date.now();
-							await this.plugin.saveSettings();
-							new Notice(`Attached to session: ${session.name}`);
-							this.plugin.loadSession(sessionId);
-						}
-					} else {
-						// Create new session
-						const newSession = this.createNewSession();
-						this.plugin.settings.sessions.push(newSession);
-						this.plugin.settings.activeSessionId = newSession.id;
-						await this.plugin.saveSettings();
-						new Notice(`Created new session: ${newSession.name}`);
-						this.display();
-					}
-				})
-		);
-
-		// Clear sessions button
-		if (sessions.length > 0) {
-			new Setting(section)
-				.setName("Clear All Sessions")
-				.setDesc(`Remove all ${sessions.length} saved session(s)`)
-				.addButton((btn) =>
-					btn
-						.setButtonText("Clear")
-						.setWarning()
-						.onClick(async () => {
-							this.plugin.settings.sessions = [];
-							this.plugin.settings.activeSessionId = null;
-							await this.plugin.saveSettings();
-							new Notice("All sessions cleared");
-							this.display();
-						})
-				);
-		}
-	}
-
-	private createNewSession(): CopilotSession {
-		const now = Date.now();
-		return {
-			id: `session-${now}`,
-			name: `Session ${new Date(now).toLocaleDateString()} ${new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-			createdAt: now,
-			lastUsedAt: now,
-			archived: false,
-			messages: [],
-		};
-	}
-
 	private renderAdvancedSettings(containerEl: HTMLElement): void {
-		const section = containerEl.createDiv({ cls: "ghcp-settings-section ghcp-settings-advanced" });
+		const section = containerEl.createDiv({ cls: "vc-settings-section vc-settings-advanced" });
 		
 		const header = section.createEl("details");
 		header.createEl("summary", { text: "Advanced Settings" });
 		
-		const content = header.createDiv({ cls: "ghcp-advanced-content" });
+		const content = header.createDiv({ cls: "vc-advanced-content" });
 
 		// CLI Path
 		new Setting(content)
@@ -492,23 +386,30 @@ export class CopilotSettingTab extends PluginSettingTab {
 	}
 
 	private renderHelpSection(containerEl: HTMLElement): void {
-		const section = containerEl.createDiv({ cls: "ghcp-settings-section ghcp-settings-help" });
+		const section = containerEl.createDiv({ cls: "vc-settings-section vc-settings-help" });
 		
-		const helpContent = section.createDiv({ cls: "ghcp-help-content" });
+		const helpContent = section.createDiv({ cls: "vc-help-content" });
 		
-		helpContent.createEl("h4", { text: "About" });
-		helpContent.createEl("p", { 
-			text: "This plugin integrates GitHub Copilot into Obsidian, enabling AI-powered chat that can read, search, and create notes in your vault."
+		helpContent.createEl("h4", { text: "About Vault Copilot" });
+		helpContent.createEl("p", {
+			text: "Vault Copilot brings AI assistance into Obsidian by connecting to your GitHub Copilot account. It uses the GitHub Copilot CLI SDK along with Agent Skills, MCP tools, and plugin-defined skills to enable powerful operations inside your vault. The assistant can read and search notes, create and update content, help organize information, and support workflows that span multiple plugins."
+		});
+		helpContent.createEl("p", {
+			text: "Vault Copilot is designed to be extensible. You can add your own skills, enable MCP integrations, or install plugins that register additional capabilities. The assistant automatically discovers these tools and uses them when they are relevant."
+		});
+		helpContent.createEl("p", {
+			text: "Vault Copilot is a community project. It is not affiliated with, sponsored by, or endorsed by Microsoft or GitHub."
 		});
 
-		const reqDiv = helpContent.createDiv({ cls: "ghcp-requirements" });
+		const reqDiv = helpContent.createDiv({ cls: "vc-requirements" });
 		reqDiv.createEl("h4", { text: "Requirements" });
 		const reqList = reqDiv.createEl("ul");
-		reqList.createEl("li", { text: "GitHub Copilot CLI" });
+		reqList.createEl("li", { text: "GitHub Copilot CLI installed" });
 		reqList.createEl("li", { text: "Active GitHub Copilot subscription" });
-		reqList.createEl("li", { text: "Desktop version of Obsidian" });
+		reqList.createEl("li", { text: "Authentication completed through the Copilot CLI" });
+		reqList.createEl("li", { text: "Obsidian vault with read and write access" });
 
-		const linksDiv = helpContent.createDiv({ cls: "ghcp-help-links" });
+		const linksDiv = helpContent.createDiv({ cls: "vc-help-links" });
 		
 		const links = [
 			{ text: "Documentation", url: "https://docs.github.com/en/copilot" },

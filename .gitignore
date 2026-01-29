@@ -22,5 +22,5 @@ data.json
 .DS_Store
 
 # Test vault plugin files (deployed, not committed)
-test-vault/.obsidian/plugins/obsidian-ghcp/main.js
-test-vault/.obsidian/plugins/obsidian-ghcp/styles.css
+test-vault/.obsidian/plugins/obsidian-vault-copilot/main.js
+test-vault/.obsidian/plugins/obsidian-vault-copilot/styles.css

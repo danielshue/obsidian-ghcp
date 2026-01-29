@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const PLUGIN_ID = "obsidian-ghcp";
+const PLUGIN_ID = "obsidian-vault-copilot";
 const TEST_VAULT_PATH = join(__dirname, "test-vault");
 const PLUGIN_DEST = join(TEST_VAULT_PATH, ".obsidian", "plugins", PLUGIN_ID);
 

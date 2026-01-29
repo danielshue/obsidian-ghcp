@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-ghcp",
+	"name": "obsidian-vault-copilot",
 	"version": "0.0.1",
-	"description": "GitHub Copilot integration plugin for Obsidian",
+	"description": "Vault Copilot brings AI assistance into Obsidian by connecting to your GitHub Copilot account, enabling chat, note operations, extensible skills, MCP tools, and advanced workflows powered by the Copilot CLI SDK.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

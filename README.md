@@ -1,136 +1,62 @@
-# GitHub Copilot for Obsidian
+# Vault Copilot
 
-Integrate GitHub Copilot AI assistant into Obsidian for chat-based interactions with your notes.
+Vault Copilot is an unofficial Obsidian plugin that brings AI-powered assistance to your entire vault. It uses the GitHub Copilot CLI SDK as its foundation, which allows the plugin to communicate with your GitHub Copilot account and execute advanced operations through a skill-based architecture.
+
+Vault Copilot is more than a simple bridge to your notes. It provides an extensible skill system that lets the AI interact with your Obsidian workspace, including searching notes, reading and modifying content, generating new files, organizing information, and working with structured or unstructured context from across your vault.
+
+The plugin is built for extensibility. It supports Model Context Protocol (MCP), which allows developers to expose their own tools, APIs, commands, or workflows as additional skills that Vault Copilot can use. Third-party Obsidian plugins can also register their own capabilities, allowing the AI to interact with features provided by other plugins.
+
+With this foundation, Vault Copilot becomes a flexible reasoning and automation layer inside Obsidian. You can ask questions, draft or rewrite content, trigger vault operations, coordinate workflows that span multiple plugins, and extend the system with your own tooling as your needs grow.
+
+Vault Copilot is a community project and is not affiliated with, sponsored by, or endorsed by Microsoft or GitHub. An active GitHub Copilot subscription is required for AI features.
+
+
+![Vault Copilot Chat & Session Window](docs/images/obsidian-vault-chat-session.png)
+*The screenshot shows Vault Copilot in action. The left panel displays the AI chat interface where you can converse with Vault Copilot, attach notes for context, give it commands against your vault, and receive streaming responses back from Vault Copilot. The right panel shows the Session Management view, allowing you to browse, resume, and organize your previous conversations.*
 
 ## Features
 
-- **AI-Powered Chat**: Have conversations with GitHub Copilot directly in Obsidian
-- **Note Context**: Attach notes to your conversations for context-aware responses
-- **Vault Integration**: Copilot can read, search, and create notes in your vault
-- **Multiple Models**: Choose from various AI models (GPT-4.1, GPT-4o, Claude, etc.)
-- **Streaming Responses**: See responses as they're generated in real-time
-- **Session Management**: Save and resume previous conversations
+### AI-Powered Chat
+Have natural conversations with GitHub Copilot directly inside Obsidian. Ask questions, explore ideas, analyze content, and draft or rewrite text using a conversational interface.
+
+### Note Context Attachment
+Attach notes to a conversation so the model can use their content for more accurate and context-aware responses. Useful for research, documentation, journaling, or large project work.
+
+### Vault Integration
+Vault Copilot can read, search, create, modify, and organize notes inside your vault. These operations are exposed as structured skills that the AI can call when needed.
+
+### Extensible Skills System
+Vault Copilot exposes a flexible skill layer that allows the AI to perform structured operations. You can add your own skills or extend existing ones to support new workflows.
+
+### Agent Skills Support
+Vault Copilot supports Agent Skills, a feature that allows GitHub Copilot to load domain-specific workflows when they are relevant to the task at hand. Agent Skills are folders that contain instructions, scripts, and resources that Copilot automatically loads when the content matches your prompt. GitHub describes Agent Skills as a way to teach Copilot how to perform specialized tasks in a specific and repeatable way. They work across the Copilot coding agent, the Copilot CLI, and agent mode in Visual Studio Code Insiders. 
+
+In Obsidian, this means you can create skills that teach Copilot how to work with your vault. For example, you can store skills that describe how your notes are organized, how you structure writing projects, how you manage daily notes, or how you want information to be reformatted. Vault Copilot will use these skills when they are relevant and follow the instructions and examples you provide. This allows you to customize how Copilot interacts with your notes and ensure more consistent and predictable results across your workspace. 
+
+Agent Skills can include step-by-step instructions, templates, transformation patterns, or sample note formats. When a task matches the skill’s purpose, Copilot loads the skill instructions and applies them to your Obsidian vault, which helps maintain your personal style and structure. This gives you a way to teach Copilot how you want things done inside Obsidian instead of relying only on generic AI behavior.
+
+### Powered by the GitHub Copilot CLI SDK
+Built on top of the GitHub Copilot CLI SDK, Vault Copilot supports advanced capabilities such as:
+- Secure execution of structured commands
+- Parameterized and typed tools the model can reliably call
+- Context-aware tool selection and multi-step reasoning
+- Automatic parsing of arguments, paths, and note operations
+- Improved agent behavior due to the SDK’s tool invocation framework
+
+This makes Vault Copilot more predictable, more capable, and safer than traditional prompt-only approaches.
+
+### Model Context Protocol (MCP) Support
+Integrate additional tools, APIs, and external systems into Vault Copilot through MCP. This allows the model to work with custom data sources, command handlers, or automation scripts.
+
+### Multiple AI Models
+Choose from available models such as GPT-4.1, GPT-4o, Claude, and others provided through your GitHub Copilot account.
+
 
 ## Requirements
 
 - **GitHub Copilot subscription** (Individual, Business, or Enterprise)
 - **GitHub Copilot CLI** installed and authenticated
 - **Desktop only** (not compatible with Obsidian Mobile)
-
-## Installation
-
-### Using BRAT (Recommended for Beta Testing)
-
-[BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewer's Auto-update Tool) makes it easy to install and update beta plugins.
-
-1. Install BRAT from Obsidian's Community Plugins
-2. Open BRAT settings
-3. Click "Add Beta plugin"
-4. Enter the repository: `danshue/obsidian-ghcp`
-5. Click "Add Plugin"
-
-BRAT will automatically install and keep the plugin updated.
-
-### Manual Installation
-
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/danshue/obsidian-ghcp/releases)
-2. Create a folder: `<vault>/.obsidian/plugins/obsidian-ghcp/`
-3. Copy the downloaded files into that folder
-4. Reload Obsidian
-5. Enable the plugin in Settings → Community plugins
-
-## Setup
-
-### 1. Install GitHub Copilot CLI
-
-The plugin requires the GitHub Copilot CLI to be installed:
-
-**Windows (WinGet):**
-```bash
-winget install GitHub.Copilot
-```
-
-**macOS (Homebrew):**
-```bash
-brew install copilot-cli
-```
-
-**npm (all platforms):**
-```bash
-npm install -g @github/copilot
-```
-
-### 2. Authenticate
-
-Open the plugin settings and click "Authenticate" to sign in with your GitHub account.
-
-### 3. Initialize Vault
-
-Click "Initialize Vault" in settings to register your vault with Copilot:
-```bash
-copilot --add-dir "<vault_path>"
-```
-
-## Usage
-
-### Open Chat
-- Click the Copilot icon in the sidebar, or
-- Use the command palette: "GitHub Copilot: Open Chat"
-
-![GitHub Copilot Chat & Session Window](docs/images/obsidian-ghcp-chat-session.png)
-
-*The screenshot above shows GitHub Copilot for Obsidian in action. The left panel displays the AI chat interface where you can converse with GitHub Copilot for Obsidian, attach notes for context, give it commands against your vault, and receive streaming responses back from GitHub Copilot for Obsidian. The right panel shows the Session Management view, allowing you to browse, resume, and organize your previous conversations.*
-
-### Attach Notes
-Click the paperclip icon to attach notes to your message for context.
-
-### Keyboard Shortcuts
-- `Enter` - Send message
-- `Shift+Enter` - New line
-
-## Commands
-
-- **Open Chat** - Open the Copilot chat panel
-- **Connect** - Connect to the Copilot service
-- **Clear Chat** - Clear current conversation
-- **Open Settings** - Open plugin settings
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build for development (watch mode)
-npm run dev
-
-# Build for production
-npm run build
-
-# Build and deploy to test vault
-npm run build:deploy
-
-# Lint
-npm run lint
-```
-
-## Creating a Release
-
-1. Update version in `manifest.json`
-2. Run `npm version patch|minor|major` to update `package.json` and `versions.json`
-3. Commit changes
-4. Create and push a tag matching the version:
-   ```bash
-   git tag 1.0.1
-   git push origin 1.0.1
-   ```
-5. GitHub Actions will automatically build and create the release
-
-For beta releases, use semver pre-release tags:
-```bash
-git tag 1.0.1-beta.1
-git push origin 1.0.1-beta.1
-```
 
 ## License
 

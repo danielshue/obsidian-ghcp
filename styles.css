@@ -1,7 +1,7 @@
 /* GitHub Copilot Plugin Styles */
 
 /* Chat Container */
-.ghcp-chat-container {
+.vc-chat-container {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -10,7 +10,7 @@
 }
 
 /* Header */
-.ghcp-chat-header {
+.vc-chat-header {
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
@@ -19,19 +19,19 @@
 	background: transparent;
 }
 
-.ghcp-chat-header h4 {
+.vc-chat-header h4 {
 	margin: 0;
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-normal);
 }
 
-.ghcp-header-actions {
+.vc-header-actions {
 	display: flex;
 	gap: 8px;
 }
 
-.ghcp-header-btn {
+.vc-header-btn {
 	background: transparent !important;
 	border: none !important;
 	padding: 4px;
@@ -45,34 +45,34 @@
 	outline: none !important;
 }
 
-.ghcp-header-btn:hover,
-.ghcp-header-btn:focus,
-.ghcp-header-btn:active {
+.vc-header-btn:hover,
+.vc-header-btn:focus,
+.vc-header-btn:active {
 	background: transparent !important;
 	color: var(--text-normal);
 	box-shadow: none !important;
 	outline: none !important;
 }
 
-.ghcp-header-btn svg,
-.ghcp-header-btn .svg-icon {
+.vc-header-btn svg,
+.vc-header-btn .svg-icon {
 	width: 16px;
 	height: 16px;
 	display: block;
 }
 
-.ghcp-header-btn:hover svg,
-.ghcp-header-btn:hover .svg-icon {
+.vc-header-btn:hover svg,
+.vc-header-btn:hover .svg-icon {
 	display: block;
 }
 
-.ghcp-session-toggle-btn {
+.vc-session-toggle-btn {
 	width: 28px;
 	height: 28px;
 }
 
 /* Messages Container */
-.ghcp-messages {
+.vc-messages {
 	flex: 1;
 	overflow-y: auto;
 	padding: 16px;
@@ -83,7 +83,7 @@
 }
 
 /* Welcome Message */
-.ghcp-welcome {
+.vc-welcome {
 	text-align: center;
 	padding: 32px 24px;
 	color: var(--text-muted);
@@ -91,20 +91,45 @@
 	margin: 0 auto;
 }
 
-.ghcp-welcome h3 {
+.vc-welcome-logo {
+	margin-bottom: 16px;
+	color: var(--text-muted);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.vc-welcome-logo svg {
+	opacity: 0.7;
+}
+
+.vc-welcome-title {
+	margin: 0 0 8px 0;
+	font-size: 24px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.vc-welcome-disclaimer {
+	margin: 0 0 24px 0;
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.vc-welcome h3 {
 	margin: 0 0 8px 0;
 	color: var(--text-normal);
 }
 
-.ghcp-welcome p {
+.vc-welcome p {
 	margin: 0 0 16px 0;
 }
 
-.ghcp-quick-action {
+.vc-quick-action {
 	margin-bottom: 24px;
 }
 
-.ghcp-suggestion-btn {
+.vc-suggestion-btn {
 	width: 100%;
 	padding: 10px 16px;
 	background: var(--background-secondary);
@@ -116,27 +141,29 @@
 	transition: background 0.15s, border-color 0.15s;
 }
 
-.ghcp-suggestion-btn:hover {
+.vc-suggestion-btn:hover {
 	background: var(--background-modifier-hover);
 	border-color: var(--interactive-accent);
 }
 
-.ghcp-examples,
-.ghcp-commands {
+.vc-examples,
+.vc-commands,
+.vc-capabilities {
 	margin-top: 24px;
 	text-align: left;
 }
 
-.ghcp-examples-title,
-.ghcp-commands-title {
+.vc-examples-title,
+.vc-commands-title,
+.vc-capabilities-title {
 	font-size: 13px;
 	font-weight: 500;
 	color: var(--text-normal);
 	margin: 0 0 12px 0;
 }
 
-.ghcp-examples-list,
-.ghcp-commands-list {
+.vc-examples-list,
+.vc-commands-list {
 	list-style: none;
 	padding: 0;
 	margin: 0;
@@ -145,7 +172,16 @@
 	gap: 8px;
 }
 
-.ghcp-examples-list li {
+.vc-capabilities-list {
+	list-style: disc;
+	padding: 0 0 0 20px;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.vc-examples-list li {
 	padding: 6px 12px;
 	background: var(--background-secondary);
 	border-radius: 6px;
@@ -154,14 +190,21 @@
 	line-height: 1.4;
 }
 
-.ghcp-commands-list li {
+.vc-commands-list li {
 	padding: 4px 0;
 	color: var(--text-muted);
 	font-size: 12px;
 	line-height: 1.6;
 }
 
-.ghcp-command-code {
+.vc-capabilities-list li {
+	padding: 0;
+	color: var(--text-muted);
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.vc-command-code {
 	background: var(--code-background);
 	color: var(--code-normal);
 	padding: 2px 6px;
@@ -171,21 +214,21 @@
 }
 
 /* Message Styles */
-.ghcp-message {
+.vc-message {
 	padding: 10px;
 	border-radius: 8px;
 	position: relative;
 }
 
-.ghcp-message-user {
+.vc-message-user {
 	background: var(--background-secondary);
 }
 
-.ghcp-message-assistant {
+.vc-message-assistant {
 	background: transparent;
 }
 
-.ghcp-message-content {
+.vc-message-content {
 	color: var(--text-normal);
 	line-height: 1.5;
 	user-select: text;
@@ -193,24 +236,24 @@
 	cursor: text;
 }
 
-.ghcp-message-content a {
+.vc-message-content a {
 	color: var(--link-color);
 	text-decoration: underline;
 	cursor: pointer;
 }
 
-.ghcp-message-content a:hover {
+.vc-message-content a:hover {
 	color: var(--link-color-hover);
 }
 
-.ghcp-message-actions {
+.vc-message-actions {
 	display: flex;
 	justify-content: flex-end;
 	margin-top: 8px;
 	padding-top: 4px;
 }
 
-.ghcp-copy-btn {
+.vc-copy-btn {
 	background: transparent !important;
 	border: none !important;
 	padding: 4px !important;
@@ -225,40 +268,40 @@
 	box-shadow: none !important;
 }
 
-.ghcp-copy-btn:hover {
+.vc-copy-btn:hover {
 	color: var(--text-normal);
 	background: var(--background-modifier-hover) !important;
 }
 
-.ghcp-message-content p:first-child {
+.vc-message-content p:first-child {
 	margin-top: 0;
 }
 
-.ghcp-message-content p:last-child {
+.vc-message-content p:last-child {
 	margin-bottom: 0;
 }
 
-.ghcp-message-content pre {
+.vc-message-content pre {
 	background: var(--background-secondary);
 	border-radius: 6px;
 	padding: 12px;
 	overflow-x: auto;
 }
 
-.ghcp-message-content code {
+.vc-message-content code {
 	background: var(--background-secondary);
 	padding: 2px 6px;
 	border-radius: 4px;
 	font-size: 0.9em;
 }
 
-.ghcp-message-content pre code {
+.vc-message-content pre code {
 	background: transparent;
 	padding: 0;
 }
 
 /* Error Message */
-.ghcp-error {
+.vc-error {
 	padding: 12px 16px;
 	background: rgba(var(--color-red-rgb), 0.1);
 	border: 1px solid var(--text-error);
@@ -267,14 +310,14 @@
 }
 
 /* Input Area */
-.ghcp-input-area {
+.vc-input-area {
 	padding: 12px 2px 9px 2px;
 	border-top: none;
 	background: var(--background-primary);
 	flex-shrink: 0;
 }
 
-.ghcp-input-wrapper {
+.vc-input-wrapper {
 	display: flex;
 	flex-direction: column;
 	background: var(--background-secondary);
@@ -284,11 +327,11 @@
 	transition: border-color 0.15s;
 }
 
-.ghcp-input-wrapper:focus-within {
+.vc-input-wrapper:focus-within {
 	border-color: var(--interactive-accent);
 }
 
-.ghcp-input {
+.vc-input {
 	width: 100%;
 	background: transparent;
 	border: none;
@@ -302,31 +345,31 @@
 	margin-bottom: 2px;
 }
 
-.ghcp-input::placeholder {
+.vc-input::placeholder {
 	color: var(--text-muted);
 }
 
 /* Input Toolbar */
-.ghcp-input-toolbar {
+.vc-input-toolbar {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 4px;
 }
 
-.ghcp-toolbar-left {
+.vc-toolbar-left {
 	display: flex;
 	align-items: center;
 	gap: 2px;
 }
 
-.ghcp-toolbar-right {
+.vc-toolbar-right {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.ghcp-toolbar-btn {
+.vc-toolbar-btn {
 	width: 20px;
 	height: 20px;
 	border: none !important;
@@ -343,13 +386,13 @@
 	box-shadow: none !important;
 }
 
-.ghcp-toolbar-btn:hover {
+.vc-toolbar-btn:hover {
 	color: var(--text-normal);
 	background: transparent !important;
 }
 
-.ghcp-toolbar-btn:focus,
-.ghcp-toolbar-btn:active {
+.vc-toolbar-btn:focus,
+.vc-toolbar-btn:active {
 	outline: none !important;
 	border: none !important;
 	box-shadow: none !important;
@@ -357,7 +400,7 @@
 }
 
 /* Model Selector */
-.ghcp-model-selector {
+.vc-model-selector {
 	padding: 2px 14px 2px 4px;
 	background: transparent;
 	border: none !important;
@@ -376,15 +419,15 @@
 	white-space: nowrap;
 }
 
-.ghcp-model-selector:hover {
+.vc-model-selector:hover {
 	color: var(--text-normal);
 }
 
-.ghcp-model-selector:focus {
+.vc-model-selector:focus {
 	color: var(--text-normal);
 }
 
-.ghcp-model-rate {
+.vc-model-rate {
 	margin-left: auto;
 	padding-left: 16px;
 	color: var(--text-muted);
@@ -392,7 +435,7 @@
 	float: right;
 }
 
-.ghcp-send-btn {
+.vc-send-btn {
 	flex-shrink: 0;
 	width: 20px;
 	height: 20px;
@@ -410,35 +453,35 @@
 	box-shadow: none !important;
 }
 
-.ghcp-send-btn:hover:not(:disabled) {
+.vc-send-btn:hover:not(:disabled) {
 	color: var(--text-normal);
 	background: transparent !important;
 }
 
-.ghcp-send-btn:focus,
-.ghcp-send-btn:active {
+.vc-send-btn:focus,
+.vc-send-btn:active {
 	outline: none !important;
 	border: none !important;
 	box-shadow: none !important;
 	background: transparent !important;
 }
 
-.ghcp-send-btn:disabled {
+.vc-send-btn:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
 
-.ghcp-send-btn.ghcp-loading {
-	animation: ghcp-pulse 1s ease-in-out infinite;
+.vc-send-btn.vc-loading {
+	animation: vc-pulse 1s ease-in-out infinite;
 }
 
-@keyframes ghcp-pulse {
+@keyframes vc-pulse {
 	0%, 100% { opacity: 1; }
 	50% { opacity: 0.5; }
 }
 
 /* Status Bar */
-.ghcp-status {
+.vc-status {
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -448,11 +491,11 @@
 	transition: background 0.15s;
 }
 
-.ghcp-status:hover {
+.vc-status:hover {
 	background: var(--background-modifier-hover);
 }
 
-.ghcp-status-logo {
+.vc-status-logo {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -460,113 +503,113 @@
 	transition: color 0.15s;
 }
 
-.ghcp-status:hover .ghcp-status-logo {
+.vc-status:hover .vc-status-logo {
 	color: var(--text-normal);
 }
 
-.ghcp-status-indicator {
+.vc-status-indicator {
 	width: 6px;
 	height: 6px;
 	border-radius: 50%;
 }
 
-.ghcp-status-indicator.ghcp-connected {
+.vc-status-indicator.vc-connected {
 	background: var(--color-green);
 	box-shadow: 0 0 4px var(--color-green);
 }
 
-.ghcp-status-indicator.ghcp-disconnected {
+.vc-status-indicator.vc-disconnected {
 	background: var(--text-muted);
 }
 
 /* Settings Help */
-.ghcp-settings-help {
+.vc-settings-help {
 	margin-top: 16px;
 	padding: 12px;
 	background: var(--background-secondary);
 	border-radius: 8px;
 }
 
-.ghcp-settings-help p {
+.vc-settings-help p {
 	margin: 0;
 }
 
-.ghcp-settings-help a {
+.vc-settings-help a {
 	color: var(--interactive-accent);
 }
 
 /* Scrollbar Styling */
-.ghcp-messages::-webkit-scrollbar {
+.vc-messages::-webkit-scrollbar {
 	width: 8px;
 }
 
-.ghcp-messages::-webkit-scrollbar-track {
+.vc-messages::-webkit-scrollbar-track {
 	background: transparent;
 }
 
-.ghcp-messages::-webkit-scrollbar-thumb {
+.vc-messages::-webkit-scrollbar-thumb {
 	background: var(--background-modifier-border);
 	border-radius: 4px;
 }
 
-.ghcp-messages::-webkit-scrollbar-thumb:hover {
+.vc-messages::-webkit-scrollbar-thumb:hover {
 	background: var(--background-modifier-border-hover);
 }
 
 /* Typing indicator (optional future enhancement) */
-.ghcp-typing {
+.vc-typing {
 	display: flex;
 	gap: 4px;
 	padding: 12px 16px;
 }
 
-.ghcp-typing-dot {
+.vc-typing-dot {
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
 	background: var(--text-muted);
-	animation: ghcp-typing-bounce 1.4s ease-in-out infinite;
+	animation: vc-typing-bounce 1.4s ease-in-out infinite;
 }
 
-.ghcp-typing-dot:nth-child(2) {
+.vc-typing-dot:nth-child(2) {
 	animation-delay: 0.2s;
 }
 
-.ghcp-typing-dot:nth-child(3) {
+.vc-typing-dot:nth-child(3) {
 	animation-delay: 0.4s;
 }
 
-@keyframes ghcp-typing-bounce {
+@keyframes vc-typing-bounce {
 	0%, 60%, 100% { transform: translateY(0); }
 	30% { transform: translateY(-8px); }
 }
 
 /* CLI Status Section in Settings */
-.ghcp-cli-status-section {
+.vc-cli-status-section {
 	padding: 16px;
 	background: var(--background-secondary);
 	border-radius: 8px;
 	margin-bottom: 16px;
 }
 
-.ghcp-status-checking {
+.vc-status-checking {
 	color: var(--text-muted);
 	font-style: italic;
 }
 
-.ghcp-status-row {
+.vc-status-row {
 	display: flex;
 	align-items: center;
 	padding: 8px 0;
 }
 
-.ghcp-status-indicator-wrapper {
+.vc-status-indicator-wrapper {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
-.ghcp-status-dot {
+.vc-status-dot {
 	width: 12px;
 	height: 12px;
 	border-radius: 50%;
@@ -574,40 +617,40 @@
 	flex-shrink: 0;
 }
 
-.ghcp-status-ok {
+.vc-status-ok {
 	background: var(--color-green);
 	box-shadow: 0 0 6px var(--color-green);
 }
 
-.ghcp-status-error {
+.vc-status-error {
 	background: var(--color-red);
 	box-shadow: 0 0 6px var(--color-red);
 }
 
-.ghcp-status-label {
+.vc-status-label {
 	font-weight: 500;
 	color: var(--text-normal);
 }
 
-.ghcp-version {
+.vc-version {
 	color: var(--text-muted);
 	font-size: 0.9em;
 	margin-left: 4px;
 }
 
 /* Install Section */
-.ghcp-install-section {
+.vc-install-section {
 	margin-top: 16px;
 	padding-top: 16px;
 	border-top: 1px solid var(--background-modifier-border);
 }
 
-.ghcp-warning {
+.vc-warning {
 	color: var(--text-warning);
 	font-weight: 500;
 }
 
-.ghcp-install-command {
+.vc-install-command {
 	margin: 12px 0;
 	padding: 12px;
 	background: var(--background-primary);
@@ -615,13 +658,13 @@
 	border: 1px solid var(--background-modifier-border);
 }
 
-.ghcp-install-command p {
+.vc-install-command p {
 	margin: 0 0 8px 0;
 	font-size: 0.9em;
 	color: var(--text-muted);
 }
 
-.ghcp-code-block {
+.vc-code-block {
 	display: block;
 	padding: 8px 12px;
 	background: var(--background-secondary);
@@ -633,7 +676,7 @@
 	margin-bottom: 8px;
 }
 
-.ghcp-copy-btn {
+.vc-copy-btn {
 	padding: 4px 12px;
 	font-size: 0.85em;
 	background: var(--background-modifier-border);
@@ -643,18 +686,18 @@
 	color: var(--text-normal);
 }
 
-.ghcp-copy-btn:hover {
+.vc-copy-btn:hover {
 	background: var(--background-modifier-hover);
 }
 
 /* Auth Section */
-.ghcp-auth-section {
+.vc-auth-section {
 	margin-top: 16px;
 	padding-top: 16px;
 	border-top: 1px solid var(--background-modifier-border);
 }
 
-.ghcp-pat-info {
+.vc-pat-info {
 	margin-top: 16px;
 	padding: 12px;
 	background: var(--background-primary);
@@ -662,72 +705,72 @@
 	font-size: 0.9em;
 }
 
-.ghcp-pat-info p {
+.vc-pat-info p {
 	margin: 0 0 8px 0;
 	color: var(--text-muted);
 }
 
-.ghcp-pat-info ol {
+.vc-pat-info ol {
 	margin: 0;
 	padding-left: 20px;
 }
 
-.ghcp-pat-info li {
+.vc-pat-info li {
 	margin: 4px 0;
 	color: var(--text-normal);
 }
 
-.ghcp-pat-info code {
+.vc-pat-info code {
 	background: var(--background-secondary);
 	padding: 2px 6px;
 	border-radius: 4px;
 	font-size: 0.9em;
 }
 
-.ghcp-pat-info a {
+.vc-pat-info a {
 	color: var(--interactive-accent);
 }
 
 /* Help Links */
-.ghcp-help-links {
+.vc-help-links {
 	margin-top: 12px;
 	font-size: 0.9em;
 }
 
-.ghcp-help-links a {
+.vc-help-links a {
 	color: var(--interactive-accent);
 }
 
-.ghcp-help-links a:hover {
+.vc-help-links a:hover {
 	text-decoration: underline;
 }
 
 /* Model Banner */
-.ghcp-model-banner {
+.vc-model-banner {
 	padding: 8px 16px;
 	background: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
 	color: var(--text-on-accent);
 	font-size: 13px;
 }
 
-.ghcp-banner-content {
+.vc-banner-content {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
-.ghcp-banner-icon {
+.vc-banner-icon {
 	display: flex;
 	align-items: center;
 	opacity: 0.9;
 }
 
-.ghcp-banner-text {
+.vc-banner-text {
 	flex: 1;
 	font-weight: 500;
 }
 
-.ghcp-banner-change-btn {
+.vc-banner-change-btn {
 	background: rgba(255, 255, 255, 0.2);
 	border: none;
 	padding: 4px 10px;
@@ -738,12 +781,12 @@
 	transition: background 0.15s;
 }
 
-.ghcp-banner-change-btn:hover {
+.vc-banner-change-btn:hover {
 	background: rgba(255, 255, 255, 0.3);
 }
 
 /* Attachments Container */
-.ghcp-attachments {
+.vc-attachments {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
@@ -755,12 +798,12 @@
 	border-bottom: none;
 }
 
-.ghcp-attachments.ghcp-has-attachments + .ghcp-input-wrapper {
+.vc-attachments.vc-has-attachments + .vc-input-wrapper {
 	border-radius: 0 0 12px 12px;
 	border-top: none;
 }
 
-.ghcp-attachment-chip {
+.vc-attachment-chip {
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -772,20 +815,20 @@
 	color: var(--text-normal);
 }
 
-.ghcp-attachment-icon {
+.vc-attachment-icon {
 	display: flex;
 	align-items: center;
 	color: var(--text-muted);
 }
 
-.ghcp-attachment-name {
+.vc-attachment-name {
 	max-width: 150px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.ghcp-attachment-remove {
+.vc-attachment-remove {
 	display: flex;
 	align-items: center;
 	padding: 2px;
@@ -795,7 +838,7 @@
 	transition: color 0.15s, background 0.15s;
 }
 
-.ghcp-attachment-remove:hover {
+.vc-attachment-remove:hover {
 	color: var(--text-error);
 	background: rgba(var(--color-red-rgb), 0.1);
 }
@@ -805,20 +848,20 @@
    ================================ */
 
 /* Settings Header */
-.ghcp-settings-header {
+.vc-settings-header {
 	margin-bottom: 24px;
 	padding-bottom: 16px;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.ghcp-settings-title-row {
+.vc-settings-title-row {
 	display: flex;
 	align-items: center;
 	gap: 12px;
 	margin-bottom: 8px;
 }
 
-.ghcp-settings-logo {
+.vc-settings-logo {
 	width: 48px;
 	height: 48px;
 	display: flex;
@@ -827,27 +870,27 @@
 	flex-shrink: 0;
 }
 
-.ghcp-settings-logo img {
+.vc-settings-logo img {
 	width: 100%;
 	height: 100%;
 	object-fit: contain;
 }
 
-.ghcp-settings-header h2 {
+.vc-settings-header h2 {
 	margin: 0;
 	font-size: 24px;
 	font-weight: 600;
 	color: var(--text-normal);
 }
 
-.ghcp-settings-header p {
+.vc-settings-header p {
 	margin: 0;
 	color: var(--text-muted);
 	font-size: 14px;
 }
 
 /* Settings Sections */
-.ghcp-settings-section {
+.vc-settings-section {
 	margin-bottom: 24px;
 	padding: 16px;
 	background: var(--background-secondary);
@@ -855,14 +898,14 @@
 	border: 1px solid var(--background-modifier-border);
 }
 
-.ghcp-section-header {
+.vc-section-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: 12px;
 }
 
-.ghcp-section-header h3 {
+.vc-section-header h3 {
 	margin: 0;
 	font-size: 16px;
 	font-weight: 600;
@@ -870,43 +913,43 @@
 }
 
 /* Status Card */
-.ghcp-status-card {
+.vc-status-card {
 	background: var(--background-primary);
 	border-radius: 6px;
 	padding: 16px;
 }
 
-.ghcp-status-grid {
+.vc-status-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 	gap: 16px;
 }
 
-.ghcp-status-item {
+.vc-status-item {
 	display: flex;
 	align-items: center;
 	gap: 10px;
 }
 
-.ghcp-status-item .ghcp-status-dot {
+.vc-status-item .vc-status-dot {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
 	flex-shrink: 0;
 }
 
-.ghcp-status-item .ghcp-status-label {
+.vc-status-item .vc-status-label {
 	font-weight: 500;
 	color: var(--text-normal);
 }
 
-.ghcp-status-item .ghcp-version {
+.vc-status-item .vc-version {
 	color: var(--text-muted);
 	font-size: 0.85em;
 	margin-left: 4px;
 }
 
-.ghcp-status-loading {
+.vc-status-loading {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -915,21 +958,21 @@
 }
 
 /* Spinner Animation */
-.ghcp-spinner {
+.vc-spinner {
 	width: 16px;
 	height: 16px;
 	border: 2px solid var(--background-modifier-border);
 	border-top-color: var(--interactive-accent);
 	border-radius: 50%;
-	animation: ghcp-spin 0.8s linear infinite;
+	animation: vc-spin 0.8s linear infinite;
 }
 
-@keyframes ghcp-spin {
+@keyframes vc-spin {
 	to { transform: rotate(360deg); }
 }
 
 /* Refresh Button */
-.ghcp-refresh-btn {
+.vc-refresh-btn {
 	background: transparent;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
@@ -943,18 +986,18 @@
 	transition: all 0.15s;
 }
 
-.ghcp-refresh-btn:hover {
+.vc-refresh-btn:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 	border-color: var(--background-modifier-border-hover);
 }
 
-.ghcp-refresh-btn.ghcp-spinning svg {
-	animation: ghcp-spin 0.8s linear infinite;
+.vc-refresh-btn.vc-spinning svg {
+	animation: vc-spin 0.8s linear infinite;
 }
 
 /* Buttons */
-.ghcp-btn-primary {
+.vc-btn-primary {
 	padding: 8px 16px;
 	background: var(--interactive-accent);
 	border: none;
@@ -966,11 +1009,11 @@
 	transition: background 0.15s;
 }
 
-.ghcp-btn-primary:hover {
+.vc-btn-primary:hover {
 	background: var(--interactive-accent-hover);
 }
 
-.ghcp-btn-secondary {
+.vc-btn-secondary {
 	padding: 8px 16px;
 	background: var(--background-modifier-border);
 	border: none;
@@ -982,11 +1025,11 @@
 	transition: all 0.15s;
 }
 
-.ghcp-btn-secondary:hover {
+.vc-btn-secondary:hover {
 	background: var(--background-modifier-hover);
 }
 
-.ghcp-btn-link {
+.vc-btn-link {
 	background: transparent;
 	border: none;
 	padding: 0;
@@ -996,25 +1039,25 @@
 	text-decoration: underline;
 }
 
-.ghcp-btn-link:hover {
+.vc-btn-link:hover {
 	text-decoration: none;
 }
 
-.ghcp-btn-row {
+.vc-btn-row {
 	display: flex;
 	gap: 12px;
 	margin-top: 16px;
 }
 
 /* Command Groups */
-.ghcp-cmd-group {
+.vc-cmd-group {
 	margin-top: 16px;
 	padding: 12px;
 	background: var(--background-primary);
 	border-radius: 6px;
 }
 
-.ghcp-cmd-group h4 {
+.vc-cmd-group h4 {
 	margin: 0 0 8px 0;
 	font-size: 13px;
 	font-weight: 500;
@@ -1023,24 +1066,24 @@
 	letter-spacing: 0.05em;
 }
 
-.ghcp-cmd-row {
+.vc-cmd-row {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	margin-bottom: 8px;
 }
 
-.ghcp-cmd-row:last-child {
+.vc-cmd-row:last-child {
 	margin-bottom: 0;
 }
 
-.ghcp-cmd-row .ghcp-code-block {
+.vc-cmd-row .vc-code-block {
 	margin: 0;
 	flex: 1;
 }
 
 /* Auth Details */
-.ghcp-auth-details {
+.vc-auth-details {
 	margin-top: 12px;
 	padding: 12px;
 	background: var(--background-primary);
@@ -1048,70 +1091,70 @@
 	font-size: 14px;
 }
 
-.ghcp-auth-details p {
+.vc-auth-details p {
 	margin: 0 0 8px 0;
 	color: var(--text-muted);
 }
 
-.ghcp-auth-details p:last-child {
+.vc-auth-details p:last-child {
 	margin-bottom: 0;
 }
 
-.ghcp-auth-details strong {
+.vc-auth-details strong {
 	color: var(--text-normal);
 }
 
 /* PAT Content */
-.ghcp-pat-content {
+.vc-pat-content {
 	margin-top: 12px;
 	padding: 12px;
 	background: var(--background-primary);
 	border-radius: 6px;
 }
 
-.ghcp-pat-content p {
+.vc-pat-content p {
 	margin: 0 0 8px 0;
 	font-size: 13px;
 	color: var(--text-muted);
 }
 
-.ghcp-pat-content ol {
+.vc-pat-content ol {
 	margin: 0;
 	padding-left: 20px;
 	font-size: 13px;
 }
 
-.ghcp-pat-content li {
+.vc-pat-content li {
 	margin: 6px 0;
 	color: var(--text-normal);
 }
 
-.ghcp-pat-content code {
+.vc-pat-content code {
 	background: var(--background-secondary);
 	padding: 2px 6px;
 	border-radius: 4px;
 	font-size: 0.9em;
 }
 
-.ghcp-pat-content a {
+.vc-pat-content a {
 	color: var(--interactive-accent);
 }
 
 /* Advanced Section Toggle */
-.ghcp-advanced-content {
+.vc-advanced-content {
 	margin-top: 12px;
 	padding-top: 12px;
 	border-top: 1px solid var(--background-modifier-border);
 }
 
 /* Session Section */
-.ghcp-session-controls {
+.vc-session-controls {
 	display: flex;
 	align-items: center;
 	gap: 12px;
 }
 
-.ghcp-session-dropdown {
+.vc-session-dropdown {
 	flex: 1;
 	padding: 8px 12px;
 	background: var(--background-primary);
@@ -1123,12 +1166,12 @@
 	min-width: 200px;
 }
 
-.ghcp-session-dropdown:focus {
+.vc-session-dropdown:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
 }
 
-.ghcp-no-sessions {
+.vc-no-sessions {
 	padding: 16px;
 	text-align: center;
 	color: var(--text-muted);
@@ -1138,7 +1181,7 @@
 }
 
 /* Message placeholder for empty settings */
-.ghcp-settings-placeholder {
+.vc-settings-placeholder {
 	padding: 24px 16px;
 	text-align: center;
 	color: var(--text-muted);
@@ -1146,11 +1189,11 @@
 }
 
 /* Link styling in settings */
-.ghcp-settings-section a {
+.vc-settings-section a {
 	color: var(--interactive-accent);
 }
 
-.ghcp-settings-section a:hover {
+.vc-settings-section a:hover {
 	text-decoration: underline;
 }
 
@@ -1159,13 +1202,13 @@
    ================================ */
 
 /* Layout Wrapper */
-.ghcp-layout-wrapper {
+.vc-layout-wrapper {
 	display: flex;
 	height: 100%;
 	overflow: hidden;
 }
 
-.ghcp-main-view {
+.vc-main-view {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -1174,7 +1217,7 @@
 }
 
 /* Resizer Handle */
-.ghcp-resizer {
+.vc-resizer {
 	width: 4px;
 	background: transparent;
 	cursor: col-resize;
@@ -1183,12 +1226,12 @@
 	transition: background 0.15s;
 }
 
-.ghcp-resizer:hover,
-.ghcp-resizer:active {
+.vc-resizer:hover,
+.vc-resizer:active {
 	background: var(--interactive-accent);
 }
 
-.ghcp-resizer::before {
+.vc-resizer::before {
 	content: "";
 	position: absolute;
 	top: 0;
@@ -1198,7 +1241,7 @@
 }
 
 /* Updated Chat Header */
-.ghcp-chat-header {
+.vc-chat-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -1208,7 +1251,7 @@
 	flex-shrink: 0;
 }
 
-.ghcp-header-left {
+.vc-header-left {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -1216,13 +1259,13 @@
 	min-width: 0;
 }
 
-.ghcp-header-right {
+.vc-header-right {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
-.ghcp-header-title {
+.vc-header-title {
 	font-size: 14px;
 	font-weight: 500;
 	color: var(--text-normal);
@@ -1231,7 +1274,7 @@
 	text-overflow: ellipsis;
 }
 
-.ghcp-header-btn {
+.vc-header-btn {
 	background: transparent !important;
 	border: none !important;
 	padding: 4px;
@@ -1246,9 +1289,9 @@
 	outline: none !important;
 }
 
-.ghcp-header-btn:hover,
-.ghcp-header-btn:focus,
-.ghcp-header-btn:active {
+.vc-header-btn:hover,
+.vc-header-btn:focus,
+.vc-header-btn:active {
 	background: transparent !important;
 	color: var(--text-normal);
 	box-shadow: none !important;
@@ -1256,7 +1299,7 @@
 }
 
 /* Session Panel Wrapper */
-.ghcp-session-panel-wrapper {
+.vc-session-panel-wrapper {
 	width: 280px;
 	min-width: 200px;
 	max-width: 50%;
@@ -1269,14 +1312,14 @@
 }
 
 /* Session Panel */
-.ghcp-session-panel {
+.vc-session-panel {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
 }
 
 /* Session Panel Titlebar */
-.ghcp-session-titlebar {
+.vc-session-titlebar {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -1286,19 +1329,19 @@
 	flex-shrink: 0;
 }
 
-.ghcp-session-titlebar-text {
+.vc-session-titlebar-text {
 	font-size: 11px;
 	font-weight: 600;
 	letter-spacing: 0.05em;
 	color: var(--text-muted);
 }
 
-.ghcp-session-toolbar {
+.vc-session-toolbar {
 	display: flex;
 	gap: 2px;
 }
 
-.ghcp-session-toolbar-btn {
+.vc-session-toolbar-btn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1315,34 +1358,34 @@
 	outline: none !important;
 }
 
-.ghcp-session-toolbar-btn:hover,
-.ghcp-session-toolbar-btn:focus,
-.ghcp-session-toolbar-btn:active {
+.vc-session-toolbar-btn:hover,
+.vc-session-toolbar-btn:focus,
+.vc-session-toolbar-btn:active {
 	background: transparent !important;
 	color: var(--text-normal);
 	box-shadow: none !important;
 	outline: none !important;
 }
 
-.ghcp-session-toolbar-btn svg,
-.ghcp-session-toolbar-btn .svg-icon {
+.vc-session-toolbar-btn svg,
+.vc-session-toolbar-btn .svg-icon {
 	width: 14px;
 	height: 14px;
 	display: block;
 }
 
 /* Session Search Bar */
-.ghcp-session-search-bar {
+.vc-session-search-bar {
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	flex-shrink: 0;
 }
 
-.ghcp-session-search-bar.ghcp-hidden {
+.vc-session-search-bar.vc-hidden {
 	display: none;
 }
 
-.ghcp-session-search-input {
+.vc-session-search-input {
 	width: 100%;
 	padding: 6px 10px;
 	font-size: 13px;
@@ -1352,18 +1395,18 @@
 	color: var(--text-normal);
 }
 
-.ghcp-session-search-input:focus {
+.vc-session-search-input:focus {
 	border-color: var(--interactive-accent);
 	outline: none;
 }
 
-.ghcp-session-panel-header {
+.vc-session-panel-header {
 	padding: 12px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	flex-shrink: 0;
 }
 
-.ghcp-session-new-btn {
+.vc-session-new-btn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1380,22 +1423,22 @@
 	transition: background 0.15s;
 }
 
-.ghcp-session-new-btn:hover {
+.vc-session-new-btn:hover {
 	background: var(--interactive-accent-hover);
 }
 
-.ghcp-session-panel-content {
+.vc-session-panel-content {
 	flex: 1;
 	overflow-y: auto;
 	padding: 8px;
 }
 
 /* Session Section */
-.ghcp-session-section {
+.vc-session-section {
 	margin-bottom: 16px;
 }
 
-.ghcp-session-section-title {
+.vc-session-section-title {
 	font-size: 11px;
 	font-weight: 600;
 	text-transform: uppercase;
@@ -1405,7 +1448,7 @@
 	margin-bottom: 4px;
 }
 
-.ghcp-session-archived-header {
+.vc-session-archived-header {
 	cursor: pointer;
 	user-select: none;
 	display: flex;
@@ -1413,17 +1456,17 @@
 	gap: 4px;
 }
 
-.ghcp-session-archived-header:hover {
+.vc-session-archived-header:hover {
 	color: var(--text-normal);
 }
 
-.ghcp-archived-toggle {
+.vc-archived-toggle {
 	font-size: 10px;
 	width: 12px;
 }
 
 /* Session Item */
-.ghcp-session-item {
+.vc-session-item {
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -1434,11 +1477,11 @@
 	margin-bottom: 2px;
 }
 
-.ghcp-session-item:hover {
+.vc-session-item:hover {
 	background: var(--background-modifier-hover);
 }
 
-.ghcp-session-item-content {
+.vc-session-item-content {
 	flex: 1;
 	min-width: 0;
 	display: flex;
@@ -1446,14 +1489,14 @@
 	gap: 2px;
 }
 
-.ghcp-session-item-icon {
+.vc-session-item-icon {
 	color: var(--text-muted);
 	display: flex;
 	align-items: center;
 	margin-right: 4px;
 }
 
-.ghcp-session-item-name {
+.vc-session-item-name {
 	font-size: 13px;
 	color: var(--text-normal);
 	white-space: nowrap;
@@ -1461,7 +1504,7 @@
 	text-overflow: ellipsis;
 }
 
-.ghcp-session-item-meta {
+.vc-session-item-meta {
 	display: flex;
 	align-items: center;
 	gap: 6px;
@@ -1469,16 +1512,16 @@
 	color: var(--text-muted);
 }
 
-.ghcp-session-duration {
+.vc-session-duration {
 	color: var(--text-faint);
 }
 
-.ghcp-session-time {
+.vc-session-time {
 	color: var(--text-muted);
 }
 
 /* Session Actions */
-.ghcp-session-item-actions {
+.vc-session-item-actions {
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -1486,11 +1529,11 @@
 	transition: opacity 0.15s;
 }
 
-.ghcp-session-item:hover .ghcp-session-item-actions {
+.vc-session-item:hover .vc-session-item-actions {
 	opacity: 1;
 }
 
-.ghcp-session-action-btn {
+.vc-session-action-btn {
 	background: transparent !important;
 	border: none !important;
 	padding: 4px;
@@ -1505,45 +1548,45 @@
 	outline: none !important;
 }
 
-.ghcp-session-action-btn:hover,
-.ghcp-session-action-btn:focus,
-.ghcp-session-action-btn:active {
+.vc-session-action-btn:hover,
+.vc-session-action-btn:focus,
+.vc-session-action-btn:active {
 	background: transparent !important;
 	color: var(--text-normal);
 	box-shadow: none !important;
 	outline: none !important;
 }
 
-.ghcp-session-action-btn svg,
-.ghcp-session-action-btn .svg-icon {
+.vc-session-action-btn svg,
+.vc-session-action-btn .svg-icon {
 	width: 14px;
 	height: 14px;
 	display: block;
 }
 
-.ghcp-session-action-btn:hover svg,
-.ghcp-session-action-btn:hover .svg-icon {
+.vc-session-action-btn:hover svg,
+.vc-session-action-btn:hover .svg-icon {
 	display: block;
 }
 
 /* Empty State */
-.ghcp-session-empty {
+.vc-session-empty {
 	text-align: center;
 	padding: 24px 16px;
 	color: var(--text-muted);
 }
 
-.ghcp-session-empty p {
+.vc-session-empty p {
 	margin: 0 0 8px 0;
 }
 
-.ghcp-session-empty-hint {
+.vc-session-empty-hint {
 	font-size: 12px;
 	color: var(--text-faint);
 }
 
 /* Rename Modal */
-.ghcp-rename-modal {
+.vc-rename-modal {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -1556,7 +1599,7 @@
 	z-index: 1000;
 }
 
-.ghcp-rename-modal-content {
+.vc-rename-modal-content {
 	background: var(--background-primary);
 	border-radius: 8px;
 	padding: 20px;
@@ -1564,14 +1607,14 @@
 	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
-.ghcp-rename-modal-content h3 {
+.vc-rename-modal-content h3 {
 	margin: 0 0 16px 0;
 	font-size: 16px;
 	font-weight: 600;
 	color: var(--text-normal);
 }
 
-.ghcp-rename-input {
+.vc-rename-input {
 	width: 100%;
 	padding: 8px 12px;
 	border: 1px solid var(--background-modifier-border);
@@ -1582,12 +1625,12 @@
 	margin-bottom: 16px;
 }
 
-.ghcp-rename-input:focus {
+.vc-rename-input:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
 }
 
-.ghcp-rename-buttons {
+.vc-rename-buttons {
 	display: flex;
 	justify-content: flex-end;
 	gap: 8px;

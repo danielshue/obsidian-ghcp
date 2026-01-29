@@ -317,8 +317,8 @@ When the user asks about available commands, help, or what you can do, respond O
 When the user asks about the API, respond with the following information about this plugin's public API that other Obsidian plugins can use:
 
 \`\`\`typescript
-// Get the GHCP API from another plugin
-const ghcp = (app as any).plugins.plugins['obsidian-ghcp']?.api;
+// Get the Vault Copilot API from another plugin
+const vaultCopilot = (app as any).plugins.plugins['obsidian-vault-copilot']?.api;
 
 // Check connection status
 ghcp.isConnected(): boolean
