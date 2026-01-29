@@ -318,46 +318,46 @@ When the user asks about the API, respond with the following information about t
 
 \`\`\`typescript
 // Get the Vault Copilot API from another plugin
-const vaultCopilot = (app as any).plugins.plugins['obsidian-vault-copilot']?.api;
+const vc = (app as any).plugins.plugins['obsidian-vault-copilot']?.api;
 
 // Check connection status
-ghcp.isConnected(): boolean
+vc.isConnected(): boolean
 
 // Connection management
-await ghcp.connect(): Promise<void>
-await ghcp.disconnect(): Promise<void>
+await vc.connect(): Promise<void>
+await vc.disconnect(): Promise<void>
 
 // Chat functionality
-await ghcp.sendMessage(prompt: string): Promise<string>
-await ghcp.sendMessageStreaming(prompt, onDelta, onComplete): Promise<void>
-ghcp.getMessageHistory(): ChatMessage[]
-await ghcp.clearHistory(): Promise<void>
+await vc.sendMessage(prompt: string): Promise<string>
+await vc.sendMessageStreaming(prompt, onDelta, onComplete): Promise<void>
+vc.getMessageHistory(): ChatMessage[]
+await vc.clearHistory(): Promise<void>
 
 // Session management
-ghcp.listSessions(): SessionInfo[]
-ghcp.getActiveSessionId(): string | null
-await ghcp.createSession(name?): Promise<SessionInfo>
-await ghcp.loadSession(sessionId): Promise<void>
-await ghcp.archiveSession(sessionId): Promise<void>
-await ghcp.unarchiveSession(sessionId): Promise<void>
-await ghcp.deleteSession(sessionId): Promise<void>
-await ghcp.renameSession(sessionId, newName): Promise<void>
+vc.listSessions(): SessionInfo[]
+vc.getActiveSessionId(): string | null
+await vc.createSession(name?): Promise<SessionInfo>
+await vc.loadSession(sessionId): Promise<void>
+await vc.archiveSession(sessionId): Promise<void>
+await vc.unarchiveSession(sessionId): Promise<void>
+await vc.deleteSession(sessionId): Promise<void>
+await vc.renameSession(sessionId, newName): Promise<void>
 
 // Note operations
-await ghcp.readNote(path): Promise<{ success, content?, error? }>
-await ghcp.searchNotes(query, limit?): Promise<{ results: Array<{ path, title, excerpt }> }>
-await ghcp.createNote(path, content): Promise<{ success, path?, error? }>
-await ghcp.updateNote(path, content): Promise<{ success, error? }>
-await ghcp.deleteNote(path): Promise<{ success, error? }>
-await ghcp.appendToNote(path, content): Promise<{ success, error? }>
-await ghcp.batchReadNotes(paths): Promise<{ results: Array<{ path, success, content?, error? }> }>
-await ghcp.renameNote(oldPath, newPath): Promise<{ success, newPath?, error? }>
+await vc.readNote(path): Promise<{ success, content?, error? }>
+await vc.searchNotes(query, limit?): Promise<{ results: Array<{ path, title, excerpt }> }>
+await vc.createNote(path, content): Promise<{ success, path?, error? }>
+await vc.updateNote(path, content): Promise<{ success, error? }>
+await vc.deleteNote(path): Promise<{ success, error? }>
+await vc.appendToNote(path, content): Promise<{ success, error? }>
+await vc.batchReadNotes(paths): Promise<{ results: Array<{ path, success, content?, error? }> }>
+await vc.renameNote(oldPath, newPath): Promise<{ success, newPath?, error? }>
 
 // Utility operations
-await ghcp.getActiveNote(): Promise<{ hasActiveNote, path?, title?, content? }>
-await ghcp.listNotes(folder?): Promise<{ notes: Array<{ path, title }> }>
-await ghcp.getRecentChanges(limit?): Promise<{ files: Array<{ path, title, mtime, mtimeFormatted }> }>
-await ghcp.getDailyNote(date?): Promise<{ success, path?, content?, exists, error? }>
+await vc.getActiveNote(): Promise<{ hasActiveNote, path?, title?, content? }>
+await vc.listNotes(folder?): Promise<{ notes: Array<{ path, title }> }>
+await vc.getRecentChanges(limit?): Promise<{ files: Array<{ path, title, mtime, mtimeFormatted }> }>
+await vc.getDailyNote(date?): Promise<{ success, path?, content?, exists, error? }>
 \`\`\`
 
 ## Guidelines

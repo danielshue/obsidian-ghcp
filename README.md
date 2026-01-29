@@ -11,8 +11,8 @@ With this foundation, Vault Copilot becomes a flexible reasoning and automation 
 Vault Copilot is a community project and is not affiliated with, sponsored by, or endorsed by Microsoft or GitHub. An active GitHub Copilot subscription is required for AI features.
 
 
-![Vault Copilot Chat & Session Window](docs/images/obsidian-vault-chat-session.png)
-*The screenshot shows Vault Copilot in action. The left panel displays the AI chat interface where you can converse with Vault Copilot, attach notes for context, give it commands against your vault, and receive streaming responses back from Vault Copilot. The right panel shows the Session Management view, allowing you to browse, resume, and organize your previous conversations.*
+![Vault Copilot Chat Interface](docs/images/obsidian-vault-chat-session.png)
+*The screenshot shows Vault Copilot in action. The chat interface allows you to converse with Vault Copilot, attach notes for context, give it commands against your vault, and receive streaming responses.*
 
 ## Features
 

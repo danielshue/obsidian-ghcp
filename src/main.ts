@@ -18,9 +18,9 @@ export interface SessionInfo {
 }
 
 /**
- * Public API for other plugins to interact with GitHub Copilot
+ * Public API for other plugins to interact with Vault Copilot
  */
-export interface GhcpAPI {
+export interface VaultCopilotAPI {
 	/** Check if the Copilot service is connected */
 	isConnected(): boolean;
 	
@@ -350,9 +350,9 @@ export default class CopilotPlugin extends Plugin {
 
 	/**
 	 * Get the public API for other plugins to use
-	 * Usage: const vaultCopilot = (app as any).plugins.plugins['obsidian-vault-copilot']?.api;
+	 * Usage: const vc = (app as any).plugins.plugins['obsidian-vault-copilot']?.api;
 	 */
-	get api(): GhcpAPI {
+	get api(): VaultCopilotAPI {
 		const service = this.copilotService;
 		const plugin = this;
 		
