@@ -1,5 +1,5 @@
 /**
- * CustomizationLoader - Loads and parses custom agents, skills, and instructions
+ * CustomizationLoader - Loads and parses custom agents, skills, instructions, and prompts
  * from configured directories in the vault.
  * 
  * File formats:
@@ -9,6 +9,7 @@
  *           1. Standard frontmatter at the top
  *           2. A ```skill code block with frontmatter inside
  * - Instructions: *.instructions.md or copilot-instructions.md with optional frontmatter (applyTo)
+ * - Prompts: *.prompt.md with frontmatter (name, description, tools, model)
  */
 
 import { App, TFile, TFolder, FileSystemAdapter } from "obsidian";
@@ -56,6 +57,28 @@ export interface CustomInstruction {
 	/** Full path to the instruction file */
 	path: string;
 	/** Raw content of the instruction file (without frontmatter) */
+	content: string;
+}
+
+/**
+ * Parsed prompt from .prompt.md file (VS Code compatible)
+ */
+export interface CustomPrompt {
+	/** Unique identifier from frontmatter name field or filename */
+	name: string;
+	/** Human-readable description */
+	description: string;
+	/** Optional tools the prompt can use */
+	tools?: string[];
+	/** Optional model override for this prompt */
+	model?: string;
+	/** Optional agent to use when running the prompt */
+	agent?: string;
+	/** Optional hint text shown in the chat input field */
+	argumentHint?: string;
+	/** Full path to the prompt file */
+	path: string;
+	/** The prompt template content (without frontmatter) */
 	content: string;
 }
 
@@ -332,10 +355,71 @@ export class CustomizationLoader {
 	}
 
 	/**
+	 * Load all prompts from the configured prompt directories
+	 */
+	async loadPrompts(directories: string[]): Promise<CustomPrompt[]> {
+		const prompts: CustomPrompt[] = [];
+
+		for (const dir of directories) {
+			const folder = this.getFolderFromPath(dir);
+			if (!folder) {
+				console.log(`[VC] Prompt directory not found: "${dir}"`);
+				continue;
+			}
+
+			console.log(`[VC] Scanning prompt directory: "${dir}" with ${folder.children.length} children`);
+
+			// Find all .prompt.md files in this directory
+			for (const child of folder.children) {
+				if (child instanceof TFile && child.extension === 'md' && child.name.endsWith('.prompt.md')) {
+					try {
+						const content = await this.app.vault.read(child);
+						const { frontmatter, body } = parseFrontmatter(content);
+
+						// Extract name from frontmatter or filename
+						let name = frontmatter.name ? String(frontmatter.name) : child.basename;
+						if (name.endsWith('.prompt')) {
+							name = name.replace('.prompt', '');
+						}
+
+						// Description is required, but we'll use a default if not provided
+						const description = frontmatter.description 
+							? String(frontmatter.description) 
+							: `Prompt from ${child.name}`;
+
+						prompts.push({
+							name,
+							description,
+							tools: Array.isArray(frontmatter.tools) ? frontmatter.tools : undefined,
+							model: frontmatter.model ? String(frontmatter.model) : undefined,
+							agent: frontmatter.agent ? String(frontmatter.agent) : undefined,
+							argumentHint: frontmatter['argument-hint'] ? String(frontmatter['argument-hint']) : undefined,
+							path: child.path,
+							content: body,
+						});
+					} catch (error) {
+						console.error(`Failed to load prompt from ${child.path}:`, error);
+					}
+				}
+			}
+		}
+
+		return prompts;
+	}
+
+	/**
 	 * Get a single agent by name
 	 */
 	async getAgent(directories: string[], name: string): Promise<CustomAgent | undefined> {
 		const agents = await this.loadAgents(directories);
 		return agents.find(a => a.name === name);
+	}
+
+	/**
+	 * Get a single prompt by name
+	 */
+	async getPrompt(directories: string[], name: string): Promise<CustomPrompt | undefined> {
+		const prompts = await this.loadPrompts(directories);
+		return prompts.find(p => p.name === name);
 	}
 }

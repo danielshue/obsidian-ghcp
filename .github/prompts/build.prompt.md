@@ -1,6 +1,8 @@
 ---
+agent: 'agent'
 name: build
 description: Build and deploy the Obsidian plugin to the test vault
+model: 'Opus 4.5'
 ---
 Build and deploy the Obsidian Vault Copilot plugin to the test vault for local testing.
 

@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "8fa8985b89b62203",
+        "id": "d06cb4c1c86bf7a7",
         "type": "tabs",
         "children": [
           {
-            "id": "37c7392ef09a7e52",
+            "id": "9b7f753db1a2182e",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Reference/Prompts/create-daily-note.prompt.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "create-daily-note.prompt"
             }
           }
         ]
@@ -186,9 +190,19 @@
       "bases:Create new base": false
     }
   },
-  "active": "37c7392ef09a7e52",
+  "active": "9b7f753db1a2182e",
   "lastOpenFiles": [
+    "Reference/Prompts/create-release.prompt.md",
+    "Reference/Prompts/create-daily-note.prompt.md",
+    "Reference/Prompts/code-review.prompt.md",
     "Daily Notes/2026-01-30.md",
+    "Daily Notes/2026-01-28.md",
+    "Reference/Prompts/meeting-update.prompt.md",
+    "Reference/Prompts/summarize-note.prompt.md",
+    "Reference/Prompts/extract-tasks.prompt.md",
+    "Reference/Prompts/daily-review.prompt.md",
+    "Reference/Prompts/add-task.prompt.md",
+    "Reference/Prompts",
     "copilot-instructions.md",
     "Projects/Meeting - Project Alpha and Beta - 2026-01-30.md",
     "Todays Activities - 2026-01-30.md",
@@ -207,22 +221,12 @@
     "Reference/Skills/obsidian-task/obsidian-tasks.skill.md",
     "Reference/Skills/obsidian-task",
     "Welcome.md",
-    "MyOtherCustomAgents/learning-companion.agent.md",
     "MyOtherCustomAgents",
     "MyCustomAgent",
-    "Reference/Getting Started.md",
-    "Reference/Instructions/documentation.instructions.md",
-    "Reference/Instructions/coding-standards.instructions.md",
-    "Reference/Agents/research-assistant.agent.md",
     "Reference/Agents",
     "Reference/Instructions",
-    "Reference/Skills/webapp-testing/SKILL.md",
-    "Reference/Skills/github-actions-debugging/SKILL.md",
     "Reference/Skills/webapp-testing",
     "Reference/Skills/github-actions-debugging",
-    "Reference/Skills",
-    "Instructions/documentation.instructions.md",
-    "Instructions/coding-standards.instructions.md",
-    "Instructions"
+    "Reference/Skills"
   ]
 }

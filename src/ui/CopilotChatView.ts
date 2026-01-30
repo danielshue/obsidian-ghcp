@@ -4,6 +4,7 @@ import CopilotPlugin from "../main";
 import { AVAILABLE_MODELS, CopilotSession } from "../settings";
 import { SessionPanel } from "./SessionPanel";
 import { CachedAgentInfo } from "../copilot/AgentCache";
+import { CachedPromptInfo } from "../copilot/PromptCache";
 
 export const COPILOT_VIEW_TYPE = "copilot-chat-view";
 
@@ -297,6 +298,11 @@ export class CopilotChatView extends ItemView {
 	private selectedAgent: CachedAgentInfo | null = null;
 	private agentSelectorEl: HTMLButtonElement | null = null;
 	private agentCacheUnsubscribe: (() => void) | null = null;
+	private promptPickerEl: HTMLElement | null = null;
+	private promptCacheUnsubscribe: (() => void) | null = null;
+	private promptPickerVisible = false;
+	private promptPickerSelectedIndex = 0;
+	private filteredPrompts: CachedPromptInfo[] = [];
 
 	constructor(leaf: WorkspaceLeaf, plugin: CopilotPlugin, copilotService: CopilotService) {
 		super(leaf);
@@ -372,11 +378,23 @@ export class CopilotChatView extends ItemView {
 		// Main input wrapper (the box)
 		const inputWrapper = inputArea.createDiv({ cls: "vc-input-wrapper" });
 		
+		// Prompt picker dropdown (hidden by default, shown when user types /)
+		this.promptPickerEl = inputWrapper.createDiv({ cls: "vc-prompt-picker" });
+		this.promptPickerEl.style.display = "none";
+		
+		// Subscribe to prompt cache changes
+		this.promptCacheUnsubscribe = this.plugin.promptCache.onCacheChange(() => {
+			// If picker is visible, refresh the list
+			if (this.promptPickerVisible) {
+				this.updatePromptPicker(this.inputEl.value);
+			}
+		});
+		
 		// Textarea that grows with content
 		this.inputEl = inputWrapper.createEl("textarea", {
 			cls: "vc-input",
 			attr: { 
-				placeholder: "Ask Vault Copilot anything or command",
+				placeholder: "Ask Vault Copilot anything or type / for prompts",
 				rows: "1"
 			}
 		});
@@ -559,6 +577,35 @@ export class CopilotChatView extends ItemView {
 
 		// Event listeners
 		this.inputEl.addEventListener("keydown", (e) => {
+			// Handle prompt picker navigation
+			if (this.promptPickerVisible) {
+				if (e.key === "ArrowDown") {
+					e.preventDefault();
+					this.promptPickerSelectedIndex = Math.min(
+						this.promptPickerSelectedIndex + 1,
+						this.filteredPrompts.length - 1
+					);
+					this.highlightPromptPickerItem();
+					return;
+				}
+				if (e.key === "ArrowUp") {
+					e.preventDefault();
+					this.promptPickerSelectedIndex = Math.max(this.promptPickerSelectedIndex - 1, 0);
+					this.highlightPromptPickerItem();
+					return;
+				}
+				if (e.key === "Enter" || e.key === "Tab") {
+					e.preventDefault();
+					this.selectPromptFromPicker();
+					return;
+				}
+				if (e.key === "Escape") {
+					e.preventDefault();
+					this.hidePromptPicker();
+					return;
+				}
+			}
+			
 			if (e.key === "Enter" && !e.shiftKey) {
 				e.preventDefault();
 				this.sendMessage();
@@ -567,6 +614,7 @@ export class CopilotChatView extends ItemView {
 
 		this.inputEl.addEventListener("input", () => {
 			this.autoResizeInput();
+			this.handlePromptPickerInput();
 		});
 
 		this.sendButton.addEventListener("click", () => this.handleSendOrCancel());
@@ -918,6 +966,11 @@ export class CopilotChatView extends ItemView {
 		if (this.agentCacheUnsubscribe) {
 			this.agentCacheUnsubscribe();
 			this.agentCacheUnsubscribe = null;
+		}
+		// Unsubscribe from prompt cache changes
+		if (this.promptCacheUnsubscribe) {
+			this.promptCacheUnsubscribe();
+			this.promptCacheUnsubscribe = null;
 		}
 	}
 
@@ -1518,6 +1571,485 @@ export class CopilotChatView extends ItemView {
 		this.inputEl.style.height = "auto";
 		const newHeight = Math.min(this.inputEl.scrollHeight, 200);
 		this.inputEl.style.height = newHeight + "px";
+	}
+
+	/**
+	 * Handle input changes to detect prompt picker trigger
+	 */
+	private handlePromptPickerInput(): void {
+		const value = this.inputEl.value;
+		
+		// Check if the user is typing a prompt command (starts with /)
+		if (value.startsWith('/') && !value.includes(' ')) {
+			this.showPromptPicker();
+			this.updatePromptPicker(value);
+		} else {
+			this.hidePromptPicker();
+		}
+	}
+
+	/**
+	 * Show the prompt picker dropdown
+	 */
+	private showPromptPicker(): void {
+		if (!this.promptPickerEl) return;
+		this.promptPickerVisible = true;
+		this.promptPickerSelectedIndex = 0;
+		this.promptPickerEl.style.display = "block";
+	}
+
+	/**
+	 * Hide the prompt picker dropdown
+	 */
+	private hidePromptPicker(): void {
+		if (!this.promptPickerEl) return;
+		this.promptPickerVisible = false;
+		this.promptPickerEl.style.display = "none";
+	}
+
+	/**
+	 * Update the prompt picker with filtered prompts matching the query
+	 */
+	private updatePromptPicker(query: string): void {
+		if (!this.promptPickerEl) return;
+		
+		// Get the search term (remove the leading /)
+		const searchTerm = query.slice(1).toLowerCase();
+		
+		// Get prompts from cache
+		const allPrompts = this.plugin.promptCache.getPrompts();
+		
+		// Also include built-in slash commands as "prompts"
+		const builtInItems: CachedPromptInfo[] = SLASH_COMMANDS.map(cmd => ({
+			name: cmd.name,
+			description: cmd.description,
+			path: `builtin:${cmd.name}`,
+		}));
+		
+		// Combine and filter
+		const allItems = [...builtInItems, ...allPrompts];
+		this.filteredPrompts = allItems.filter(p => 
+			p.name.toLowerCase().includes(searchTerm) ||
+			p.description.toLowerCase().includes(searchTerm)
+		);
+		
+		// Ensure selected index is within bounds
+		this.promptPickerSelectedIndex = Math.min(
+			this.promptPickerSelectedIndex,
+			Math.max(0, this.filteredPrompts.length - 1)
+		);
+		
+		// Render the picker
+		this.renderPromptPicker();
+	}
+
+	/**
+	 * Render the prompt picker dropdown
+	 */
+	private renderPromptPicker(): void {
+		if (!this.promptPickerEl) return;
+		this.promptPickerEl.empty();
+		
+		if (this.filteredPrompts.length === 0) {
+			const emptyEl = this.promptPickerEl.createDiv({ cls: "vc-prompt-picker-empty" });
+			emptyEl.setText("No prompts found");
+			return;
+		}
+		
+		// Add header
+		const headerEl = this.promptPickerEl.createDiv({ cls: "vc-prompt-picker-header" });
+		headerEl.setText("Select a prompt or command");
+		
+		// Add items
+		this.filteredPrompts.forEach((prompt, index) => {
+			const itemEl = this.promptPickerEl!.createDiv({ 
+				cls: `vc-prompt-picker-item ${index === this.promptPickerSelectedIndex ? 'vc-selected' : ''}`
+			});
+			
+			// Icon based on type
+			const iconEl = itemEl.createDiv({ cls: "vc-prompt-picker-icon" });
+			if (prompt.path.startsWith('builtin:')) {
+				// Built-in command icon (terminal)
+				iconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>`;
+			} else {
+				// Custom prompt icon (file-text)
+				iconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
+			}
+			
+			// Content
+			const contentEl = itemEl.createDiv({ cls: "vc-prompt-picker-content" });
+			contentEl.createDiv({ cls: "vc-prompt-picker-name", text: `/${prompt.name}` });
+			contentEl.createDiv({ cls: "vc-prompt-picker-desc", text: prompt.description });
+			
+			// Click handler
+			itemEl.addEventListener("click", () => {
+				this.promptPickerSelectedIndex = index;
+				this.selectPromptFromPicker();
+			});
+			
+			// Hover handler
+			itemEl.addEventListener("mouseenter", () => {
+				this.promptPickerSelectedIndex = index;
+				this.highlightPromptPickerItem();
+			});
+		});
+	}
+
+	/**
+	 * Highlight the currently selected prompt picker item
+	 */
+	private highlightPromptPickerItem(): void {
+		if (!this.promptPickerEl) return;
+		
+		const items = this.promptPickerEl.querySelectorAll(".vc-prompt-picker-item");
+		items.forEach((item, index) => {
+			if (index === this.promptPickerSelectedIndex) {
+				item.addClass("vc-selected");
+				// Scroll into view if needed
+				(item as HTMLElement).scrollIntoView({ block: "nearest" });
+			} else {
+				item.removeClass("vc-selected");
+			}
+		});
+	}
+
+	/**
+	 * Select the currently highlighted prompt from the picker
+	 */
+	private async selectPromptFromPicker(): Promise<void> {
+		const selectedPrompt = this.filteredPrompts[this.promptPickerSelectedIndex];
+		if (!selectedPrompt) {
+			this.hidePromptPicker();
+			return;
+		}
+		
+		// Hide the picker
+		this.hidePromptPicker();
+		
+		if (selectedPrompt.path.startsWith('builtin:')) {
+			// It's a built-in slash command - just fill in the command name
+			this.inputEl.value = `/${selectedPrompt.name} `;
+			this.inputEl.focus();
+			// Move cursor to end
+			this.inputEl.selectionStart = this.inputEl.selectionEnd = this.inputEl.value.length;
+		} else {
+			// It's a custom prompt - execute it immediately
+			await this.executePrompt(selectedPrompt);
+		}
+	}
+
+	/**
+	 * Execute a custom prompt (VS Code compatible)
+	 */
+	private async executePrompt(promptInfo: CachedPromptInfo): Promise<void> {
+		// Clear the input
+		this.inputEl.value = "";
+		this.autoResizeInput();
+		
+		// Load the full prompt content
+		const fullPrompt = await this.plugin.promptCache.getFullPrompt(promptInfo.name);
+		if (!fullPrompt) {
+			new Notice(`Could not load prompt: ${promptInfo.name}`);
+			return;
+		}
+		
+		// Ensure we have a session
+		await this.ensureSessionExists();
+		
+		// Clear welcome message if present
+		const welcomeEl = this.messagesContainer.querySelector(".vc-welcome");
+		if (welcomeEl) {
+			welcomeEl.remove();
+		}
+		
+		// Display a user message showing which prompt was executed
+		const userMessage = `Run prompt: **${promptInfo.name}**\n\n> ${promptInfo.description}`;
+		await this.renderMessage({ role: "user", content: userMessage, timestamp: new Date() });
+		this.scrollToBottom();
+		
+		// Log agent from frontmatter if specified (agent switching requires selecting before prompt)
+		if (fullPrompt.agent) {
+			const agent = this.plugin.agentCache.getAgentByName(fullPrompt.agent);
+			if (agent) {
+				console.log(`[VC] Prompt specifies agent: ${agent.name}`);
+				// Note: To use this agent, select it from the agent dropdown before running the prompt
+			} else {
+				console.warn(`[VC] Agent "${fullPrompt.agent}" specified in prompt not found`);
+			}
+		}
+		
+		// Set processing state
+		this.isProcessing = true;
+		this.updateUIState();
+		
+		try {
+			// Create streaming message element
+			this.currentStreamingMessageEl = this.createMessageElement("assistant", "");
+			this.scrollToBottom();
+			
+			// Process the prompt content with VS Code compatible variable replacement
+			let content = await this.processPromptVariables(fullPrompt.content, fullPrompt.path);
+			
+			// Process Markdown file links - resolve and include referenced content
+			content = await this.resolveMarkdownFileLinks(content, fullPrompt.path);
+			
+			// Process #tool:name references in the body
+			content = this.processToolReferences(content, fullPrompt.tools);
+
+			// Override model if specified in prompt
+			const originalModel = this.plugin.settings.model;
+			if (fullPrompt.model) {
+				this.copilotService.updateConfig({ model: fullPrompt.model });
+				console.log(`[VC] Prompt using model: ${fullPrompt.model}`);
+			}
+
+			if (this.plugin.settings.streaming) {
+				await this.copilotService.sendMessageStreaming(
+					content,
+					(delta) => {
+						if (this.currentStreamingMessageEl) {
+							const contentEl = this.currentStreamingMessageEl.querySelector(".vc-message-content");
+							if (contentEl) {
+								contentEl.textContent += delta;
+							}
+						}
+						this.scrollToBottom();
+					},
+					async (fullContent) => {
+						if (this.currentStreamingMessageEl) {
+							await this.renderMarkdownContent(this.currentStreamingMessageEl, fullContent);
+							this.addCopyButton(this.currentStreamingMessageEl);
+						}
+						this.currentStreamingMessageEl = null;
+					}
+				);
+			} else {
+				const response = await this.copilotService.sendMessage(content);
+				if (this.currentStreamingMessageEl) {
+					await this.renderMarkdownContent(this.currentStreamingMessageEl, response);
+					this.addCopyButton(this.currentStreamingMessageEl);
+				}
+				this.currentStreamingMessageEl = null;
+			}
+
+			// Restore original model if we changed it
+			if (fullPrompt.model) {
+				this.copilotService.updateConfig({ model: originalModel });
+			}
+		} catch (error) {
+			new Notice(`Prompt execution error: ${error}`);
+			if (this.currentStreamingMessageEl) {
+				this.currentStreamingMessageEl.remove();
+				this.currentStreamingMessageEl = null;
+			}
+			this.addErrorMessage(String(error));
+		} finally {
+			this.isProcessing = false;
+			this.updateUIState();
+			this.scrollToBottom();
+		}
+	}
+
+	/**
+	 * Process prompt variables using VS Code compatible ${var} syntax
+	 */
+	private async processPromptVariables(content: string, promptPath: string): Promise<string> {
+		const activeFile = this.app.workspace.getActiveFile();
+		const vaultPath = (this.app.vault.adapter as any).basePath || '';
+		
+		// VS Code compatible variables
+		// File context variables
+		if (activeFile) {
+			// ${file} - Full path to the current file
+			content = content.replace(/\$\{file\}/g, activeFile.path);
+			
+			// ${fileBasename} - Filename with extension
+			content = content.replace(/\$\{fileBasename\}/g, activeFile.name);
+			
+			// ${fileDirname} - Directory of the current file
+			const dirName = activeFile.parent?.path || '';
+			content = content.replace(/\$\{fileDirname\}/g, dirName);
+			
+			// ${fileBasenameNoExtension} - Filename without extension
+			content = content.replace(/\$\{fileBasenameNoExtension\}/g, activeFile.basename);
+			
+			// ${activeNoteContent} - Full content of active note (Obsidian-specific enhancement)
+			if (content.includes('${activeNoteContent}')) {
+				try {
+					const noteContent = await this.app.vault.cachedRead(activeFile);
+					content = content.replace(/\$\{activeNoteContent\}/g, noteContent);
+				} catch {
+					content = content.replace(/\$\{activeNoteContent\}/g, '[Could not read note content]');
+				}
+			}
+		} else {
+			content = content.replace(/\$\{file\}/g, '[No active file]');
+			content = content.replace(/\$\{fileBasename\}/g, '[No active file]');
+			content = content.replace(/\$\{fileDirname\}/g, '[No active file]');
+			content = content.replace(/\$\{fileBasenameNoExtension\}/g, '[No active file]');
+			content = content.replace(/\$\{activeNoteContent\}/g, '[No active file]');
+		}
+		
+		// Workspace variables
+		// ${workspaceFolder} - Path to the vault
+		content = content.replace(/\$\{workspaceFolder\}/g, vaultPath);
+		
+		// ${workspaceFolderBasename} - Name of the vault
+		const vaultName = this.app.vault.getName();
+		content = content.replace(/\$\{workspaceFolderBasename\}/g, vaultName);
+		
+		// Selection variables
+		// ${selection} / ${selectedText} - Currently selected text in the editor
+		const activeView = this.app.workspace.getActiveViewOfType(ItemView);
+		let selectedText = '';
+		if (activeView && 'editor' in activeView) {
+			const editor = (activeView as any).editor;
+			if (editor && typeof editor.getSelection === 'function') {
+				selectedText = editor.getSelection() || '';
+			}
+		}
+		content = content.replace(/\$\{selection\}/g, selectedText || '[No selection]');
+		content = content.replace(/\$\{selectedText\}/g, selectedText || '[No selection]');
+		
+		// Date/time variables (Obsidian-specific enhancements)
+		const now = new Date();
+		const dateStr = now.toISOString().split('T')[0] ?? now.toISOString();
+		content = content.replace(/\$\{date\}/g, dateStr);
+		content = content.replace(/\$\{time\}/g, now.toLocaleTimeString());
+		content = content.replace(/\$\{datetime\}/g, now.toISOString());
+		
+		// Legacy support - also handle {var} syntax for backwards compatibility
+		if (activeFile) {
+			content = content.replace(/\{activeNote\}/g, activeFile.path);
+			content = content.replace(/\{activeNoteName\}/g, activeFile.basename);
+			if (content.includes('{activeNoteContent}')) {
+				try {
+					const noteContent = await this.app.vault.cachedRead(activeFile);
+					content = content.replace(/\{activeNoteContent\}/g, noteContent);
+				} catch {
+					content = content.replace(/\{activeNoteContent\}/g, '[Could not read note content]');
+				}
+			}
+		} else {
+			content = content.replace(/\{activeNote\}/g, '[No active note]');
+			content = content.replace(/\{activeNoteName\}/g, '[No active note]');
+			content = content.replace(/\{activeNoteContent\}/g, '[No active note]');
+		}
+		content = content.replace(/\{date\}/g, dateStr);
+		content = content.replace(/\{time\}/g, now.toLocaleTimeString());
+		content = content.replace(/\{datetime\}/g, now.toISOString());
+		
+		return content;
+	}
+
+	/**
+	 * Resolve Markdown file links and include referenced file content
+	 * Supports [link text](relative/path.md) syntax
+	 */
+	private async resolveMarkdownFileLinks(content: string, promptPath: string): Promise<string> {
+		// Match Markdown links: [text](path.md) or [text](path)
+		const linkRegex = /\[([^\]]*)\]\(([^)]+\.md)\)/g;
+		const matches = [...content.matchAll(linkRegex)];
+		
+		if (matches.length === 0) return content;
+		
+		// Get the directory of the prompt file for relative path resolution
+		const promptDir = promptPath.substring(0, promptPath.lastIndexOf('/'));
+		
+		for (const match of matches) {
+			const fullMatch = match[0];
+			const linkText = match[1] || '';
+			const linkPath = match[2];
+			
+			// Skip if no path captured
+			if (!linkPath) continue;
+			
+			// Resolve relative path from prompt file location
+			let resolvedPath: string = linkPath;
+			if (!linkPath.startsWith('/')) {
+				resolvedPath = promptDir ? `${promptDir}/${linkPath}` : linkPath;
+			}
+			
+			// Normalize the path (handle ../ etc)
+			resolvedPath = this.normalizePath(resolvedPath);
+			
+			// Try to read the linked file
+			const linkedFile = this.app.vault.getAbstractFileByPath(resolvedPath);
+			if (linkedFile instanceof TFile) {
+				try {
+					const linkedContent = await this.app.vault.cachedRead(linkedFile);
+					// Replace the link with the file content, wrapped with context
+					const replacement = `\n\n---\n**Referenced file: ${linkText || linkedFile.basename}** (${resolvedPath})\n\n${linkedContent}\n\n---\n`;
+					content = content.replace(fullMatch, replacement);
+				} catch (error) {
+					console.warn(`[VC] Could not read linked file: ${resolvedPath}`, error);
+					content = content.replace(fullMatch, `[Could not read: ${resolvedPath}]`);
+				}
+			} else {
+				console.warn(`[VC] Linked file not found: ${resolvedPath}`);
+				content = content.replace(fullMatch, `[File not found: ${resolvedPath}]`);
+			}
+		}
+		
+		return content;
+	}
+
+	/**
+	 * Normalize a path by resolving ../ and ./ components
+	 */
+	private normalizePath(path: string): string {
+		const parts = path.split('/').filter(p => p !== '.');
+		const result: string[] = [];
+		
+		for (const part of parts) {
+			if (part === '..') {
+				result.pop();
+			} else if (part) {
+				result.push(part);
+			}
+		}
+		
+		return result.join('/');
+	}
+
+	/**
+	 * Process #tool:name references in the prompt body
+	 * This adds context about which tools are available for the prompt
+	 */
+	private processToolReferences(content: string, promptTools?: string[]): string {
+		// Find all #tool:toolName references
+		const toolRefRegex = /#tool:(\w+)/g;
+		const matches = [...content.matchAll(toolRefRegex)];
+		
+		if (matches.length === 0) return content;
+		
+		// Collect unique tool names referenced in the body
+		const referencedTools = new Set<string>();
+		for (const match of matches) {
+			if (match[1]) {
+				referencedTools.add(match[1]);
+			}
+		}
+		
+		// Build tool context if tools are referenced
+		if (referencedTools.size > 0) {
+			const toolList = Array.from(referencedTools).join(', ');
+			const toolContext = `\n\n[Tools referenced in this prompt: ${toolList}]\n`;
+			
+			// Append tool context at the end of the content
+			content = content + toolContext;
+			
+			// Replace #tool:name with just the tool name for cleaner prompt
+			content = content.replace(toolRefRegex, '`$1` tool');
+		}
+		
+		// If prompt has tools specified in frontmatter, add that context too
+		if (promptTools && promptTools.length > 0) {
+			const availableTools = promptTools.join(', ');
+			content = content + `\n[Available tools for this prompt: ${availableTools}]\n`;
+		}
+		
+		return content;
 	}
 
 	private insertCodeBlock(): void {

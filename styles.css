@@ -325,6 +325,7 @@
 	border-radius: 8px;
 	padding: 10px 12px;
 	transition: border-color 0.15s;
+	position: relative;
 }
 
 .vc-input-wrapper:focus-within {
@@ -2026,4 +2027,130 @@
 .vc-directory-input:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
+}
+
+/* ================================
+   PROMPT PICKER
+   ================================ */
+
+.vc-prompt-picker {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	right: 0;
+	margin-bottom: 4px;
+	max-height: 280px;
+	overflow-y: auto;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+	z-index: 100;
+}
+
+.vc-prompt-picker-empty {
+	padding: 12px 16px;
+	color: var(--text-muted);
+	font-size: 13px;
+	text-align: center;
+}
+
+.vc-prompt-picker-item {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 8px 12px;
+	cursor: pointer;
+	transition: background 0.1s;
+	border-bottom: 1px solid var(--background-modifier-border);
+	position: relative;
+}
+
+.vc-prompt-picker-item:last-child {
+	border-bottom: none;
+}
+
+.vc-prompt-picker-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.vc-prompt-picker-item.vc-selected {
+	background: var(--background-modifier-hover);
+}
+
+.vc-prompt-picker-item.vc-selected::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 3px;
+	background: var(--interactive-accent);
+}
+
+.vc-prompt-picker-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	color: var(--text-muted);
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.vc-prompt-picker-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.vc-prompt-picker-header {
+	padding: 8px 12px 4px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.vc-prompt-picker-name {
+	font-weight: 500;
+	color: var(--text-normal);
+	font-size: 13px;
+}
+
+.vc-prompt-picker-model {
+	font-size: 11px;
+	color: var(--text-muted);
+	background: var(--background-secondary);
+	padding: 1px 6px;
+	border-radius: 4px;
+	margin-left: auto;
+}
+
+.vc-prompt-picker-desc {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-top: 2px;
+	line-height: 1.4;
+}
+
+/* Scrollbar styling for prompt picker */
+.vc-prompt-picker::-webkit-scrollbar {
+	width: 6px;
+}
+
+.vc-prompt-picker::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.vc-prompt-picker::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 3px;
+}
+
+.vc-prompt-picker::-webkit-scrollbar-thumb:hover {
+	background: var(--background-modifier-border-hover);
 }

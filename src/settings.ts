@@ -32,6 +32,8 @@ export interface CopilotPluginSettings {
 	agentDirectories: string[];
 	/** Directories containing instruction files */
 	instructionDirectories: string[];
+	/** Directories containing prompt files */
+	promptDirectories: string[];
 }
 
 export const DEFAULT_SETTINGS: CopilotPluginSettings = {
@@ -45,6 +47,7 @@ export const DEFAULT_SETTINGS: CopilotPluginSettings = {
 	skillDirectories: [],
 	agentDirectories: [],
 	instructionDirectories: [],
+	promptDirectories: ["Reference/Prompts"],
 };
 
 export const AVAILABLE_MODELS = [
@@ -503,6 +506,18 @@ export class CopilotSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			}
 		);
+
+		// Prompt Directories Section
+		this.renderDirectoryList(
+			content,
+			"Prompt Directories",
+			"Folders containing .prompt.md files that define reusable prompts. Access prompts by typing / in chat.",
+			this.plugin.settings.promptDirectories,
+			async (dirs) => {
+				this.plugin.settings.promptDirectories = dirs;
+				await this.plugin.saveSettings();
+			}
+		);
 	}
 
 	private renderDirectoryList(
@@ -639,6 +654,9 @@ export class CopilotSettingTab extends PluginSettingTab {
 		
 		// Refresh agent cache when settings panel closes (in case directories changed)
 		this.plugin.agentCache?.refreshCache();
+		
+		// Refresh prompt cache when settings panel closes (in case directories changed)
+		this.plugin.promptCache?.refreshCache();
 	}
 }
 

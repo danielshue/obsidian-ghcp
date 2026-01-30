@@ -16,6 +16,8 @@ export interface CopilotServiceConfig {
 	agentDirectories?: string[];
 	/** Directories containing instruction files */
 	instructionDirectories?: string[];
+	/** Directories containing prompt files */
+	promptDirectories?: string[];
 }
 
 export interface ChatMessage {

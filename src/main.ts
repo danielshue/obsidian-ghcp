@@ -12,6 +12,8 @@ import {
 	SkillRegistryEvent
 } from "./copilot/SkillRegistry";
 import { AgentCache, CachedAgentInfo } from "./copilot/AgentCache";
+import { PromptCache, CachedPromptInfo } from "./copilot/PromptCache";
+import { CustomPrompt } from "./copilot/CustomizationLoader";
 
 /**
  * Session info returned by the API
@@ -28,7 +30,7 @@ export interface SessionInfo {
 }
 
 // Re-export skill types for external plugins
-export type { VaultCopilotSkill, SkillInfo, SkillResult, McpServerConfig, SkillRegistryEvent, CachedAgentInfo };
+export type { VaultCopilotSkill, SkillInfo, SkillResult, McpServerConfig, SkillRegistryEvent, CachedAgentInfo, CachedPromptInfo, CustomPrompt };
 
 /**
  * Public API for other plugins to interact with Vault Copilot
@@ -134,6 +136,20 @@ export interface VaultCopilotAPI {
 	/** Get all configured MCP servers */
 	getMcpServers(): Map<string, McpServerConfig>;
 	
+	// ===== Prompt Operations =====
+	
+	/** List all available prompts */
+	listPrompts(): CachedPromptInfo[];
+	
+	/** Get a prompt by name (cached info only) */
+	getPromptInfo(name: string): CachedPromptInfo | undefined;
+	
+	/** Get the full prompt content by name */
+	getFullPrompt(name: string): Promise<CustomPrompt | undefined>;
+	
+	/** Execute a prompt by name */
+	executePrompt(name: string, variables?: Record<string, string>): Promise<string>;
+	
 	// ===== Note Operations =====
 	
 	/** Read a note by path */
@@ -178,6 +194,7 @@ export default class CopilotPlugin extends Plugin {
 	copilotService: CopilotService | null = null;
 	skillRegistry: SkillRegistry;
 	agentCache: AgentCache;
+	promptCache: PromptCache;
 	private statusBarEl: HTMLElement | null = null;
 
 	async onload(): Promise<void> {
@@ -189,6 +206,10 @@ export default class CopilotPlugin extends Plugin {
 		// Initialize agent cache
 		this.agentCache = new AgentCache(this.app);
 		await this.agentCache.initialize(this.settings.agentDirectories);
+
+		// Initialize prompt cache
+		this.promptCache = new PromptCache(this.app);
+		await this.promptCache.initialize(this.settings.promptDirectories);
 
 		// Initialize Copilot service
 		this.copilotService = new CopilotService(this.app, this.getServiceConfig());
@@ -273,6 +294,7 @@ export default class CopilotPlugin extends Plugin {
 	async onunload(): Promise<void> {
 		await this.disconnectCopilot();
 		this.agentCache?.destroy();
+		this.promptCache?.destroy();
 	}
 
 	async loadSettings(): Promise<void> {
@@ -290,6 +312,11 @@ export default class CopilotPlugin extends Plugin {
 		// Update agent cache when agent directories change
 		if (this.agentCache) {
 			await this.agentCache.updateDirectories(this.settings.agentDirectories);
+		}
+		
+		// Update prompt cache when prompt directories change
+		if (this.promptCache) {
+			await this.promptCache.updateDirectories(this.settings.promptDirectories);
 		}
 	}
 
@@ -318,6 +345,7 @@ export default class CopilotPlugin extends Plugin {
 			skillDirectories: resolvePaths(this.settings.skillDirectories),
 			agentDirectories: resolvePaths(this.settings.agentDirectories),
 			instructionDirectories: resolvePaths(this.settings.instructionDirectories),
+			promptDirectories: resolvePaths(this.settings.promptDirectories),
 		};
 	}
 
@@ -706,6 +734,38 @@ export default class CopilotPlugin extends Plugin {
 			
 			getMcpServers: () => {
 				return plugin.skillRegistry.getMcpServers();
+			},
+			
+			// ===== Prompt Operations =====
+			
+			listPrompts: () => {
+				return plugin.promptCache.getPrompts();
+			},
+			
+			getPromptInfo: (name: string) => {
+				return plugin.promptCache.getPromptByName(name);
+			},
+			
+			getFullPrompt: async (name: string) => {
+				return await plugin.promptCache.getFullPrompt(name);
+			},
+			
+			executePrompt: async (name: string, variables?: Record<string, string>) => {
+				if (!service) throw new Error("Copilot service not initialized");
+				if (!service.isConnected()) await plugin.connectCopilot();
+				
+				const prompt = await plugin.promptCache.getFullPrompt(name);
+				if (!prompt) throw new Error(`Prompt not found: ${name}`);
+				
+				// Replace variables in the prompt content
+				let content = prompt.content;
+				if (variables) {
+					for (const [key, value] of Object.entries(variables)) {
+						content = content.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+					}
+				}
+				
+				return await service.sendMessage(content);
 			},
 		};
 	}
