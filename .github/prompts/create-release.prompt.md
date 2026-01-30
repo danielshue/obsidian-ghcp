@@ -1,7 +1,7 @@
 ---
 name: Create Release
 description: Automate version bump, tagging, and GitHub release for obsidian-vault-copilot
-tools: ["mcp_github_list_releases", "mcp_github_get_file_contents", "mcp_github_push_files", "run_in_terminal"]
+tools: ["mcp_github_list_releases", "mcp_github_get_file_contents", "mcp_github_push_files", "execute/runInTerminal"]
 argument-hint: Specify major, minor, or patch version bump (default: patch)
 ---
 # Create Release for obsidian-vault-copilot
@@ -43,7 +43,7 @@ Use `mcp_github_push_files` to commit and push all version updates in a single c
 Commit message: `Bump version to X.Y.Z`
 
 ### Step 5: Create Release
-Use `run_in_terminal` to create the GitHub release with the `gh` CLI:
+Use `execute/runInTerminal` to create the GitHub release with the `gh` CLI:
 
 ```bash
 gh release create X.Y.Z --repo danielshue/obsidian-vault-copilot --title "Release X.Y.Z" --generate-notes
