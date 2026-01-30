@@ -11,6 +11,7 @@ import {
 	McpServerConfig,
 	SkillRegistryEvent
 } from "./copilot/SkillRegistry";
+import { AgentCache, CachedAgentInfo } from "./copilot/AgentCache";
 
 /**
  * Session info returned by the API
@@ -27,7 +28,7 @@ export interface SessionInfo {
 }
 
 // Re-export skill types for external plugins
-export type { VaultCopilotSkill, SkillInfo, SkillResult, McpServerConfig, SkillRegistryEvent };
+export type { VaultCopilotSkill, SkillInfo, SkillResult, McpServerConfig, SkillRegistryEvent, CachedAgentInfo };
 
 /**
  * Public API for other plugins to interact with Vault Copilot
@@ -176,6 +177,7 @@ export default class CopilotPlugin extends Plugin {
 	settings: CopilotPluginSettings;
 	copilotService: CopilotService | null = null;
 	skillRegistry: SkillRegistry;
+	agentCache: AgentCache;
 	private statusBarEl: HTMLElement | null = null;
 
 	async onload(): Promise<void> {
@@ -183,6 +185,10 @@ export default class CopilotPlugin extends Plugin {
 
 		// Initialize skill registry
 		this.skillRegistry = getSkillRegistry();
+
+		// Initialize agent cache
+		this.agentCache = new AgentCache(this.app);
+		await this.agentCache.initialize(this.settings.agentDirectories);
 
 		// Initialize Copilot service
 		this.copilotService = new CopilotService(this.app, this.getServiceConfig());
@@ -266,6 +272,7 @@ export default class CopilotPlugin extends Plugin {
 
 	async onunload(): Promise<void> {
 		await this.disconnectCopilot();
+		this.agentCache?.destroy();
 	}
 
 	async loadSettings(): Promise<void> {
@@ -279,15 +286,47 @@ export default class CopilotPlugin extends Plugin {
 		if (this.copilotService) {
 			this.copilotService.updateConfig(this.getServiceConfig());
 		}
+		
+		// Update agent cache when agent directories change
+		if (this.agentCache) {
+			await this.agentCache.updateDirectories(this.settings.agentDirectories);
+		}
 	}
 
 	private getServiceConfig(): CopilotServiceConfig {
+		// Resolve relative paths to absolute paths based on vault location
+		const vaultPath = this.getVaultBasePath();
+		
+		const resolvePaths = (paths: string[]): string[] => {
+			if (!vaultPath) return paths;
+			return paths.map(p => {
+				// If already absolute, use as-is
+				if (p.startsWith('/') || p.match(/^[A-Za-z]:\\/)) {
+					return p;
+				}
+				// Otherwise, resolve relative to vault
+				return `${vaultPath}/${p}`.replace(/\\/g, '/');
+			});
+		};
+
 		return {
 			model: this.settings.model,
 			cliPath: this.settings.cliPath || undefined,
 			cliUrl: this.settings.cliUrl || undefined,
 			streaming: this.settings.streaming,
+			skillRegistry: this.skillRegistry,
+			skillDirectories: resolvePaths(this.settings.skillDirectories),
+			agentDirectories: resolvePaths(this.settings.agentDirectories),
+			instructionDirectories: resolvePaths(this.settings.instructionDirectories),
 		};
+	}
+
+	private getVaultBasePath(): string | undefined {
+		const adapter = this.app.vault.adapter;
+		if ('getBasePath' in adapter && typeof adapter.getBasePath === 'function') {
+			return adapter.getBasePath();
+		}
+		return undefined;
 	}
 
 	async activateChatView(): Promise<void> {

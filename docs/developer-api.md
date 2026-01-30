@@ -9,6 +9,9 @@ Vault Copilot provides an extensible API that allows other plugins to:
 - **Register Skills**: Define custom tools/functions the AI can invoke
 - **Configure MCP Servers**: Add Model Context Protocol servers for additional capabilities
 - **Listen to Events**: React to skill registration/unregistration changes
+- **Manage Sessions**: Create, load, archive, and delete chat sessions
+- **Operate on Notes**: Read, create, update, search, and delete notes programmatically
+- **Send Messages**: Interact with the AI assistant directly from your plugin
 
 ## Getting Started
 
@@ -85,8 +88,8 @@ A skill is a function that the AI assistant can invoke. Skills have:
 
 - A unique name
 - A description (shown to the AI)
-- Parameter definitions with JSON Schema
-- An execute function that performs the action
+- Parameter definitions with a schema
+- A handler function that performs the action
 
 ### Registering a Skill
 
@@ -110,7 +113,7 @@ api.registerSkill({
     },
     required: ["date"]
   },
-  execute: async (args) => {
+  handler: async (args) => {
     const { date, content } = args as { date: string; content?: string };
     
     // Your logic here
@@ -119,7 +122,6 @@ api.registerSkill({
     
     return {
       success: true,
-      message: `Created daily note for ${date}`,
       data: { filePath }
     };
   }
@@ -136,22 +138,30 @@ interface VaultCopilotSkill {
   /** Human-readable description for the AI */
   description: string;
   
-  /** Your plugin's ID */
-  pluginId: string;
+  /** Parameter schema (see SkillParameterSchema below) */
+  parameters: SkillParameterSchema;
   
-  /** Optional category for organization */
-  category?: string;
+  /** Handler function that executes the skill */
+  handler: (args: Record<string, unknown>) => Promise<SkillResult>;
   
-  /** JSON Schema for parameters */
-  parameters: JSONSchema;
+  /** Optional: Your plugin's ID (recommended for cleanup) */
+  pluginId?: string;
   
-  /** Function to execute the skill */
-  execute: (args: Record<string, unknown>) => Promise<SkillResult>;
+  /** Optional: Plugin name for display purposes */
+  pluginName?: string;
+  
+  /** Optional: Version of the skill */
+  version?: string;
+  
+  /** Optional: Whether this skill requires confirmation before execution */
+  requiresConfirmation?: boolean;
+  
+  /** Optional: Category for grouping skills */
+  category?: 'notes' | 'search' | 'automation' | 'integration' | 'utility' | 'custom';
 }
 
 interface SkillResult {
   success: boolean;
-  message?: string;
   data?: unknown;
   error?: string;
 }
@@ -159,7 +169,23 @@ interface SkillResult {
 
 ### Parameter Schema Guidelines
 
-Use JSON Schema to define your parameters:
+Use the `SkillParameterSchema` interface to define your parameters:
+
+```typescript
+interface SkillParameterSchema {
+  type: 'object';
+  properties: Record<string, {
+    type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+    description: string;
+    enum?: string[];
+    items?: { type: string };
+    default?: unknown;
+  }>;
+  required?: string[];
+}
+```
+
+Example usage:
 
 ```typescript
 parameters: {
@@ -207,7 +233,8 @@ To update an existing skill (e.g., change description or parameters):
 api.updateSkill({
   name: "create_daily_note",
   description: "Creates or updates a daily note with content",
-  // ... other properties
+  parameters: { /* ... */ },
+  handler: async (args) => { /* ... */ }
 });
 ```
 
@@ -218,7 +245,8 @@ api.updateSkill({
 api.unregisterSkill("create_daily_note");
 
 // Unregister all skills from your plugin (recommended in onunload)
-api.unregisterPluginSkills("my-daily-notes-plugin");
+// Returns the number of skills unregistered
+const count = api.unregisterPluginSkills("my-daily-notes-plugin");
 ```
 
 ## Querying Skills
@@ -346,10 +374,10 @@ description: "Search notes"
 
 ### Error Handling
 
-Always return structured results:
+Always return structured results from your handler:
 
 ```typescript
-execute: async (args) => {
+handler: async (args) => {
   try {
     // Your logic
     return { success: true, data: result };
@@ -383,10 +411,80 @@ Use consistent categories to help organize skills:
 |----------|---------|
 | `notes` | Creating, reading, updating notes |
 | `search` | Searching and querying vault content |
-| `organize` | Moving, renaming, tagging files |
-| `export` | Exporting or sharing content |
+| `automation` | Automated workflows and batch operations |
 | `integration` | External service integrations |
 | `utility` | General-purpose tools |
+| `custom` | Default for uncategorized skills |
+
+## Customization Directories
+
+Vault Copilot supports three types of customization directories that users can configure in plugin settings:
+
+### Agent Directories
+
+Agents are custom personas with specific instructions and tool configurations. Agent files use the `.agent.md` extension and contain frontmatter with metadata.
+
+**File pattern:** `*.agent.md`
+
+**Example structure:**
+```markdown
+---
+name: Research Assistant
+description: Helps with academic research and citation
+tools:
+  - search_notes
+  - create_note
+  - batch_read_notes
+---
+
+You are a research assistant specialized in academic work...
+```
+
+### Skill Directories
+
+Skills define reusable capabilities and tool definitions. Each skill is organized as a subfolder containing a `SKILL.md` file.
+
+**Structure:** `<skill-name>/SKILL.md`
+
+**Example:**
+```
+skills/
+  note-formatter/
+    SKILL.md
+  citation-helper/
+    SKILL.md
+```
+
+The `SKILL.md` file contains instructions and can include code blocks for structured configuration.
+
+### Instruction Directories
+
+Instructions provide additional context and guidelines that the assistant follows. Instruction files use the `.instructions.md` extension.
+
+**File pattern:** `*.instructions.md`
+
+**Example:**
+```markdown
+---
+name: Vault Organization
+applyTo: "**"
+---
+
+When creating notes in this vault:
+- Use sentence case for titles
+- Add a "created" date in frontmatter
+- Place new notes in appropriate folders based on content type
+```
+
+### Configuring Directories
+
+Users configure these directories in **Settings → Vault Copilot → Advanced Settings**:
+
+- **Skill Directories**: Folders containing skill subfolders with `SKILL.md` files
+- **Agent Directories**: Folders containing `*.agent.md` files
+- **Instruction Directories**: Folders containing `*.instructions.md` files
+
+Paths can be relative to the vault (e.g., `.copilot/agents`) or absolute paths.
 
 ## TypeScript Types
 
@@ -394,11 +492,32 @@ For TypeScript users, here are the complete type definitions:
 
 ```typescript
 interface VaultCopilotAPI {
+  // Connection
+  isConnected(): boolean;
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  
+  // Chat
+  sendMessage(prompt: string): Promise<string>;
+  sendMessageStreaming(prompt: string, onDelta: (delta: string) => void, onComplete?: (fullContent: string) => void): Promise<void>;
+  getMessageHistory(): ChatMessage[];
+  clearHistory(): Promise<void>;
+  
+  // Session Management
+  listSessions(): SessionInfo[];
+  getActiveSessionId(): string | null;
+  createSession(name?: string): Promise<SessionInfo>;
+  loadSession(sessionId: string): Promise<void>;
+  archiveSession(sessionId: string): Promise<void>;
+  unarchiveSession(sessionId: string): Promise<void>;
+  deleteSession(sessionId: string): Promise<void>;
+  renameSession(sessionId: string, newName: string): Promise<void>;
+  
   // Skill Management
   registerSkill(skill: VaultCopilotSkill): void;
   updateSkill(skill: VaultCopilotSkill): void;
   unregisterSkill(name: string): boolean;
-  unregisterPluginSkills(pluginId: string): void;
+  unregisterPluginSkills(pluginId: string): number;
   
   // Skill Queries
   listSkills(): SkillInfo[];
@@ -416,28 +535,60 @@ interface VaultCopilotAPI {
   configureMcpServer(id: string, config: McpServerConfig): void;
   removeMcpServer(id: string): boolean;
   getMcpServers(): Map<string, McpServerConfig>;
+  
+  // Note Operations
+  readNote(path: string): Promise<{ success: boolean; content?: string; error?: string }>;
+  searchNotes(query: string, limit?: number): Promise<{ results: Array<{ path: string; title: string; excerpt: string }> }>;
+  createNote(path: string, content: string): Promise<{ success: boolean; path?: string; error?: string }>;
+  getActiveNote(): Promise<{ hasActiveNote: boolean; path?: string; title?: string; content?: string }>;
+  listNotes(folder?: string): Promise<{ notes: Array<{ path: string; title: string }> }>;
+  appendToNote(path: string, content: string): Promise<{ success: boolean; error?: string }>;
+  batchReadNotes(paths: string[]): Promise<{ results: Array<{ path: string; success: boolean; content?: string; error?: string }> }>;
+  updateNote(path: string, content: string): Promise<{ success: boolean; error?: string }>;
+  deleteNote(path: string): Promise<{ success: boolean; error?: string }>;
+  getRecentChanges(limit?: number): Promise<{ files: Array<{ path: string; title: string; mtime: number; mtimeFormatted: string }> }>;
+  getDailyNote(date?: string): Promise<{ success: boolean; path?: string; content?: string; exists: boolean; error?: string }>;
+  renameNote(oldPath: string, newPath: string): Promise<{ success: boolean; newPath?: string; error?: string }>;
+}
+
+interface SkillParameterSchema {
+  type: 'object';
+  properties: Record<string, {
+    type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+    description: string;
+    enum?: string[];
+    items?: { type: string };
+    default?: unknown;
+  }>;
+  required?: string[];
 }
 
 interface VaultCopilotSkill {
   name: string;
   description: string;
-  pluginId: string;
-  category?: string;
-  parameters: JSONSchema;
-  execute: (args: Record<string, unknown>) => Promise<SkillResult>;
+  parameters: SkillParameterSchema;
+  handler: (args: Record<string, unknown>) => Promise<SkillResult>;
+  pluginId?: string;
+  pluginName?: string;
+  version?: string;
+  requiresConfirmation?: boolean;
+  category?: 'notes' | 'search' | 'automation' | 'integration' | 'utility' | 'custom';
 }
 
 interface SkillInfo {
   name: string;
   description: string;
-  pluginId: string;
+  parameters: SkillParameterSchema;
+  pluginId?: string;
+  pluginName?: string;
+  version?: string;
+  requiresConfirmation?: boolean;
   category?: string;
-  parameters: JSONSchema;
+  registeredAt: number;
 }
 
 interface SkillResult {
   success: boolean;
-  message?: string;
   data?: unknown;
   error?: string;
 }
@@ -454,6 +605,23 @@ interface McpServerConfig {
   name?: string;
   enabled?: boolean;
 }
+
+interface SessionInfo {
+  id: string;
+  name: string;
+  createdAt: number;
+  lastUsedAt: number;
+  completedAt?: number;
+  durationMs?: number;
+  archived: boolean;
+  messageCount: number;
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 ```
 
 ## Example Plugin
@@ -465,7 +633,7 @@ import { Plugin, Notice } from "obsidian";
 
 interface VaultCopilotAPI {
   registerSkill(skill: any): void;
-  unregisterPluginSkills(pluginId: string): void;
+  unregisterPluginSkills(pluginId: string): number;
 }
 
 export default class QuickNotePlugin extends Plugin {
@@ -513,7 +681,7 @@ export default class QuickNotePlugin extends Plugin {
         },
         required: ["content"]
       },
-      execute: async (args: Record<string, unknown>) => {
+      handler: async (args: Record<string, unknown>) => {
         const folder = (args.folder as string) || "Quick Notes";
         const title = (args.title as string) || new Date().toISOString();
         const content = args.content as string;

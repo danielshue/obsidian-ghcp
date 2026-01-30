@@ -1,11 +1,20 @@
 import { CopilotClient, CopilotSession, SessionEvent, defineTool } from "@github/copilot-sdk";
 import { App, TFile, Notice } from "obsidian";
+import { SkillRegistry, VaultCopilotSkill } from "./SkillRegistry";
 
 export interface CopilotServiceConfig {
 	model: string;
 	cliPath?: string;
 	cliUrl?: string;
 	streaming: boolean;
+	/** Skill registry for plugin-registered skills */
+	skillRegistry?: SkillRegistry;
+	/** Directories containing skill definition files */
+	skillDirectories?: string[];
+	/** Directories containing custom agent definition files */
+	agentDirectories?: string[];
+	/** Directories containing instruction files */
+	instructionDirectories?: string[];
 }
 
 export interface ChatMessage {
@@ -81,16 +90,32 @@ export class CopilotService {
 			await this.session.destroy();
 		}
 
-		const tools = this.createObsidianTools();
+		// Combine built-in tools with registered plugin skills
+		const builtInTools = this.createObsidianTools();
+		const registeredTools = this.convertRegisteredSkillsToTools();
+		const tools = [...builtInTools, ...registeredTools];
 
-		this.session = await this.client!.createSession({
+		// Build session config
+		const sessionConfig: Record<string, unknown> = {
 			model: this.config.model,
 			streaming: this.config.streaming,
 			tools,
 			systemMessage: {
 				content: this.getSystemPrompt(),
 			},
-		});
+		};
+
+		// Add skill directories if configured
+		if (this.config.skillDirectories && this.config.skillDirectories.length > 0) {
+			sessionConfig.skillDirectories = this.config.skillDirectories;
+		}
+
+		// Add custom agents from agent directories if configured
+		if (this.config.agentDirectories && this.config.agentDirectories.length > 0) {
+			sessionConfig.customAgents = this.buildCustomAgentsConfig();
+		}
+
+		this.session = await this.client!.createSession(sessionConfig as any);
 
 		// Set up event handler
 		this.session.on((event: SessionEvent) => {
@@ -98,6 +123,53 @@ export class CopilotService {
 		});
 
 		this.messageHistory = [];
+	}
+
+	/**
+	 * Convert registered skills from SkillRegistry to SDK-compatible tools
+	 */
+	private convertRegisteredSkillsToTools(): ReturnType<typeof defineTool>[] {
+		if (!this.config.skillRegistry) {
+			return [];
+		}
+
+		const tools: ReturnType<typeof defineTool>[] = [];
+		
+		// Get all skills that have handlers
+		const registry = this.config.skillRegistry;
+		for (const skillInfo of registry.listSkills()) {
+			const skill = registry.getSkill(skillInfo.name);
+			if (!skill) continue;
+
+			// Convert VaultCopilotSkill to SDK tool using defineTool
+			const tool = defineTool(skill.name, {
+				description: skill.description,
+				parameters: skill.parameters as any,
+				handler: async (args: Record<string, unknown>) => {
+					const result = await skill.handler(args);
+					// Convert SkillResult to tool result format
+					if (result.success) {
+						return result.data ?? { success: true, message: "Skill executed successfully" };
+					} else {
+						return { success: false, error: result.error ?? "Skill execution failed" };
+					}
+				},
+			});
+			
+			tools.push(tool);
+		}
+
+		return tools;
+	}
+
+	/**
+	 * Build custom agents configuration from agent directories
+	 */
+	private buildCustomAgentsConfig(): Array<{ name: string; slug: string; instructions: string }> {
+		// For now, return empty array - agents will be loaded from directories by the SDK
+		// The SDK's customAgents expects an array of agent configurations
+		// When agentDirectories is set, the CLI will discover agents from those paths
+		return [];
 	}
 
 	/**
@@ -363,14 +435,56 @@ await vc.getDailyNote(date?): Promise<{ success, path?, content?, exists, error?
 ## Guidelines
 - When the user asks about their notes, use the available tools to fetch the content
 - Format your responses in Markdown, which Obsidian renders natively
-- Use [[wikilinks]] syntax when referencing notes in the vault
+- **Always use [[wikilinks]] when referencing files in the vault** so users can click to navigate (e.g., [[Daily Notes/2026-01-29]] or [[Projects/My Project.md]])
 - Be concise but helpful
 - If you're unsure about something, ask for clarification
 - For bulk operations, prefer batch_read_notes over multiple read_note calls
 
 ## Context
 You are running inside Obsidian and have access to the user's vault through the provided tools.
+
+## Customization Directories
+The following directories are configured for extending your capabilities:
+
+${this.getCustomizationDirectoriesInfo()}
 `;
+	}
+
+	/**
+	 * Generate information about configured customization directories
+	 */
+	private getCustomizationDirectoriesInfo(): string {
+		const sections: string[] = [];
+
+		const agentDirs = this.config.agentDirectories || [];
+		if (agentDirs.length > 0) {
+			sections.push(`### Agent Directories
+Agents are custom personas with specific instructions and tool configurations.
+Locations: ${agentDirs.map(d => `\`${d}\``).join(', ')}
+File pattern: \`*.agent.md\``);
+		}
+
+		const skillDirs = this.config.skillDirectories || [];
+		if (skillDirs.length > 0) {
+			sections.push(`### Skill Directories
+Skills define reusable capabilities and tool definitions. Each skill is a subfolder containing a SKILL.md file.
+Locations: ${skillDirs.map(d => `\`${d}\``).join(', ')}
+Structure: \`<skill-name>/SKILL.md\``);
+		}
+
+		const instructionDirs = this.config.instructionDirectories || [];
+		if (instructionDirs.length > 0) {
+			sections.push(`### Instruction Directories
+Instructions provide additional context and guidelines for your responses.
+Locations: ${instructionDirs.map(d => `\`${d}\``).join(', ')}
+File pattern: \`*.instructions.md\``);
+		}
+
+		if (sections.length === 0) {
+			return 'No customization directories are configured. Users can add agent, skill, and instruction directories in the plugin settings.';
+		}
+
+		return sections.join('\n\n');
 	}
 
 	private createObsidianTools() {

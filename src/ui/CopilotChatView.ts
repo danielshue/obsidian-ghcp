@@ -3,6 +3,7 @@ import { CopilotService, ChatMessage } from "../copilot/CopilotService";
 import CopilotPlugin from "../main";
 import { AVAILABLE_MODELS, CopilotSession } from "../settings";
 import { SessionPanel } from "./SessionPanel";
+import { CachedAgentInfo } from "../copilot/AgentCache";
 
 export const COPILOT_VIEW_TYPE = "copilot-chat-view";
 
@@ -293,6 +294,9 @@ export class CopilotChatView extends ItemView {
 	private resizerEl: HTMLElement | null = null;
 	private sessionToggleBtnEl: HTMLElement | null = null;
 	private isResizing = false;
+	private selectedAgent: CachedAgentInfo | null = null;
+	private agentSelectorEl: HTMLButtonElement | null = null;
+	private agentCacheUnsubscribe: (() => void) | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: CopilotPlugin, copilotService: CopilotService) {
 		super(leaf);
@@ -390,6 +394,93 @@ export class CopilotChatView extends ItemView {
 		});
 		attachBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`;
 		attachBtn.addEventListener("click", () => this.openNotePicker());
+
+		// Agent selector button
+		this.agentSelectorEl = toolbarLeft.createEl("button", { 
+			cls: "vc-agent-selector",
+			attr: { "aria-label": "Select agent" }
+		});
+		this.updateAgentSelectorText();
+
+		// Subscribe to agent cache changes to refresh the dropdown
+		this.agentCacheUnsubscribe = this.plugin.agentCache.onCacheChange((event) => {
+			// When cache is reloaded (e.g., new directory added), check if selected agent still exists
+			if (event.type === 'loaded') {
+				if (this.selectedAgent) {
+					// Check if the selected agent is still in the new list
+					const stillExists = event.agents.some(a => a.path === this.selectedAgent?.path);
+					if (!stillExists) {
+						this.selectedAgent = null;
+						this.updateAgentSelectorText();
+					}
+				}
+			}
+			// If selected agent was removed, reset selection
+			else if (event.type === 'removed' && this.selectedAgent?.path === event.path) {
+				this.selectedAgent = null;
+				this.updateAgentSelectorText();
+			}
+			// If selected agent was updated, refresh its info
+			else if (event.type === 'updated' && this.selectedAgent?.path === event.agent.path) {
+				this.selectedAgent = event.agent;
+				this.updateAgentSelectorText();
+			}
+		});
+		
+		this.agentSelectorEl.addEventListener("click", (e) => {
+			const menu = new Menu();
+			
+			// Default option (no agent)
+			menu.addItem((item) => {
+				item.setTitle("Default")
+					.onClick(() => {
+						this.selectedAgent = null;
+						this.updateAgentSelectorText();
+					});
+				if (this.selectedAgent === null) {
+					item.setChecked(true);
+				}
+			});
+			
+			// Get agents from the plugin's cache (already loaded)
+			const agents = this.plugin.agentCache.getAgents();
+			
+			if (agents.length > 0) {
+				menu.addSeparator();
+				
+				for (const agent of agents) {
+					menu.addItem((item) => {
+						item.setTitle(agent.name)
+							.onClick(() => {
+								this.selectedAgent = agent;
+								this.updateAgentSelectorText();
+								new Notice(`Agent: ${agent.name}`);
+							});
+						if (this.selectedAgent?.name === agent.name) {
+							item.setChecked(true);
+						}
+						// Add description as tooltip-like text
+						const itemEl = (item as any).dom as HTMLElement;
+						if (agent.description) {
+							const descSpan = itemEl.createSpan({ cls: "vc-agent-desc", text: agent.description });
+							itemEl.appendChild(descSpan);
+						}
+					});
+				}
+			} else if (this.plugin.settings.agentDirectories.length === 0) {
+				menu.addItem((item) => {
+					item.setTitle("No agent directories configured")
+						.setDisabled(true);
+				});
+			} else {
+				menu.addItem((item) => {
+					item.setTitle("No agents found")
+						.setDisabled(true);
+				});
+			}
+			
+			menu.showAtMouseEvent(e as MouseEvent);
+		});
 
 		// Model selector button
 		const modelSelector = toolbarLeft.createEl("button", { 
@@ -602,11 +693,40 @@ export class CopilotChatView extends ItemView {
 	}
 
 	/**
+	 * Update the agent selector button text
+	 */
+	private updateAgentSelectorText(): void {
+		if (!this.agentSelectorEl) return;
+		
+		if (this.selectedAgent) {
+			this.agentSelectorEl.textContent = this.selectedAgent.name;
+			this.agentSelectorEl.addClass("vc-agent-selected");
+		} else {
+			this.agentSelectorEl.textContent = "Agent";
+			this.agentSelectorEl.removeClass("vc-agent-selected");
+		}
+	}
+
+	/**
+	 * Get the currently selected agent
+	 */
+	getSelectedAgent(): CachedAgentInfo | null {
+		return this.selectedAgent;
+	}
+
+	/**
 	 * Create a new chat session
 	 */
 	async createNewSession(name?: string): Promise<void> {
 		// Save current session before creating new one
 		await this.saveCurrentSession();
+
+		// Refresh agent cache to pick up any new agents
+		await this.plugin.agentCache.refreshCache();
+
+		// Reset selected agent for new session
+		this.selectedAgent = null;
+		this.updateAgentSelectorText();
 
 		// Create new session
 		const now = Date.now();
@@ -794,7 +914,11 @@ export class CopilotChatView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
-		// Cleanup if needed
+		// Unsubscribe from agent cache changes
+		if (this.agentCacheUnsubscribe) {
+			this.agentCacheUnsubscribe();
+			this.agentCacheUnsubscribe = null;
+		}
 	}
 
 	private async loadMessages(): Promise<void> {

@@ -427,6 +427,54 @@
 	color: var(--text-normal);
 }
 
+/* Agent Selector */
+.vc-agent-selector {
+	padding: 2px 14px 2px 4px;
+	background: transparent;
+	border: none !important;
+	box-shadow: none !important;
+	color: var(--text-muted);
+	font-size: 12px;
+	cursor: pointer;
+	outline: none;
+	transition: color 0.15s;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 2px center;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	white-space: nowrap;
+}
+
+.vc-agent-selector:hover {
+	color: var(--text-normal);
+}
+
+.vc-agent-selector:focus {
+	color: var(--text-normal);
+}
+
+.vc-agent-selector.vc-agent-selected {
+	color: var(--interactive-accent);
+}
+
+.vc-agent-selector.vc-agent-selected:hover {
+	color: var(--interactive-accent-hover);
+}
+
+.vc-agent-desc {
+	display: block;
+	margin-left: auto;
+	padding-left: 12px;
+	color: var(--text-muted);
+	font-size: 11px;
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .vc-model-rate {
 	margin-left: auto;
 	padding-left: 16px;
@@ -731,14 +779,27 @@
 	color: var(--interactive-accent);
 }
 
+/* Help Content */
+.vc-help-content p {
+	margin-bottom: 12px;
+}
+
+.vc-help-content p:last-child {
+	margin-bottom: 0;
+}
+
 /* Help Links */
 .vc-help-links {
 	margin-top: 12px;
 	font-size: 0.9em;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .vc-help-links a {
 	color: var(--interactive-accent);
+	display: block;
 }
 
 .vc-help-links a:hover {
@@ -885,9 +946,11 @@
 
 .vc-settings-header h2 {
 	margin: 0 0 4px 0;
+	padding-left: 0;
 	font-size: 20px;
 	font-weight: 600;
 	color: var(--text-normal);
+	text-align: left;
 }
 
 .vc-settings-header p {
@@ -895,6 +958,7 @@
 	color: var(--text-muted);
 	font-size: 13px;
 	line-height: 1.4;
+	text-align: left;
 }
 
 /* Settings Sections */
@@ -915,9 +979,17 @@
 
 .vc-section-header h3 {
 	margin: 0;
+	padding-left: 0;
 	font-size: 16px;
 	font-weight: 600;
 	color: var(--text-normal);
+}
+
+/* All headings in settings sections */
+.vc-settings-section h3,
+.vc-settings-section h4 {
+	padding-left: 0;
+	text-align: left;
 }
 
 /* Status Card */
@@ -1855,4 +1927,103 @@
 .vc-btn-sm {
 	padding: 4px 10px;
 	font-size: 12px;
+}
+
+/* Directory List UI */
+.vc-directory-list {
+	margin-top: 16px;
+	padding: 12px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+}
+
+.vc-directory-header {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+
+.vc-directory-title {
+	font-weight: 500;
+	font-size: 14px;
+}
+
+.vc-directory-desc {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.vc-directory-items {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 12px;
+}
+
+.vc-directory-empty {
+	font-size: 13px;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.vc-directory-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	background: var(--background-primary);
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.vc-directory-path {
+	flex: 1;
+	font-size: 13px;
+	font-family: var(--font-monospace);
+	word-break: break-all;
+}
+
+.vc-btn-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--text-muted);
+	transition: background 0.15s, color 0.15s;
+}
+
+.vc-btn-icon:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.vc-btn-remove:hover {
+	color: var(--text-error);
+}
+
+.vc-directory-add {
+	display: flex;
+	gap: 8px;
+}
+
+.vc-directory-input {
+	flex: 1;
+	padding: 6px 10px;
+	font-size: 13px;
+	font-family: var(--font-monospace);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+}
+
+.vc-directory-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
 }

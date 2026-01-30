@@ -26,6 +26,12 @@ export interface CopilotPluginSettings {
 	showInStatusBar: boolean;
 	sessions: CopilotSession[];
 	activeSessionId: string | null;
+	/** Directories containing skill definition files */
+	skillDirectories: string[];
+	/** Directories containing custom agent definition files */
+	agentDirectories: string[];
+	/** Directories containing instruction files */
+	instructionDirectories: string[];
 }
 
 export const DEFAULT_SETTINGS: CopilotPluginSettings = {
@@ -36,6 +42,9 @@ export const DEFAULT_SETTINGS: CopilotPluginSettings = {
 	showInStatusBar: true,
 	sessions: [],
 	activeSessionId: null,
+	skillDirectories: [],
+	agentDirectories: [],
+	instructionDirectories: [],
 };
 
 export const AVAILABLE_MODELS = [
@@ -86,9 +95,6 @@ export class CopilotSettingTab extends PluginSettingTab {
 		containerEl.empty();
 		containerEl.addClass("vc-settings");
 
-		// Header with branding
-		this.renderHeader(containerEl);
-
 		// CLI Status Section - renders immediately with loading state
 		this.renderCliStatusSection(containerEl);
 
@@ -106,27 +112,6 @@ export class CopilotSettingTab extends PluginSettingTab {
 
 		// Trigger async status check (non-blocking)
 		this.checkStatusAsync();
-	}
-
-	private renderHeader(containerEl: HTMLElement): void {
-		const header = containerEl.createDiv({ cls: "vc-settings-header" });
-		
-		const titleRow = header.createDiv({ cls: "vc-settings-title-row" });
-		
-		// Copilot robot logo
-		const logoWrapper = titleRow.createDiv({ cls: "vc-settings-logo" });
-		const logoImg = logoWrapper.createEl("img", {
-			attr: {
-				src: COPILOT_LOGO_DATA_URL,
-				alt: "Vault Copilot",
-				width: "48",
-				height: "48"
-			}
-		});
-		
-		const titleText = titleRow.createDiv({ cls: "vc-settings-title-text" });
-		titleText.createEl("h2", { text: "Vault Copilot" });
-		titleText.createEl("p", { text: "AI assistance for your entire vault powered by GitHub Copilot CLI, skills, and extensible tools.", cls: "vc-settings-subtitle" });
 	}
 
 	private renderCliStatusSection(containerEl: HTMLElement): void {
@@ -483,34 +468,120 @@ export class CopilotSettingTab extends PluginSettingTab {
 		
 		const content = header.createDiv({ cls: "vc-advanced-content" });
 
-		// CLI Path
-		new Setting(content)
-			.setName("Custom CLI Path")
-			.setDesc("Override the default Copilot CLI location")
-			.addText((text) =>
-				text
-					.setPlaceholder("Leave empty to use PATH")
-					.setValue(this.plugin.settings.cliPath)
-					.onChange(async (value) => {
-						this.plugin.settings.cliPath = value;
-						this.cliManager.setCliPath(value);
-						await this.plugin.saveSettings();
-					})
-			);
+		// Skill Directories Section
+		this.renderDirectoryList(
+			content,
+			"Skill Directories",
+			"Folders containing skill definition files. Paths can be relative to the vault or absolute.",
+			this.plugin.settings.skillDirectories,
+			async (dirs) => {
+				this.plugin.settings.skillDirectories = dirs;
+				await this.plugin.saveSettings();
+			}
+		);
 
-		// CLI URL for external server
-		new Setting(content)
-			.setName("External Server URL")
-			.setDesc("Connect to a remote Copilot CLI server")
-			.addText((text) =>
-				text
-					.setPlaceholder("localhost:4321")
-					.setValue(this.plugin.settings.cliUrl)
-					.onChange(async (value) => {
-						this.plugin.settings.cliUrl = value;
-						await this.plugin.saveSettings();
-					})
-			);
+		// Agent Directories Section
+		this.renderDirectoryList(
+			content,
+			"Agent Directories",
+			"Folders containing custom agent definition files. Paths can be relative to the vault or absolute.",
+			this.plugin.settings.agentDirectories,
+			async (dirs) => {
+				this.plugin.settings.agentDirectories = dirs;
+				await this.plugin.saveSettings();
+			}
+		);
+
+		// Instruction Directories Section
+		this.renderDirectoryList(
+			content,
+			"Instruction Directories",
+			"Folders containing .instructions.md files that provide context to the assistant.",
+			this.plugin.settings.instructionDirectories,
+			async (dirs) => {
+				this.plugin.settings.instructionDirectories = dirs;
+				await this.plugin.saveSettings();
+			}
+		);
+	}
+
+	private renderDirectoryList(
+		container: HTMLElement,
+		title: string,
+		description: string,
+		directories: string[],
+		onUpdate: (dirs: string[]) => Promise<void>
+	): void {
+		const wrapper = container.createDiv({ cls: "vc-directory-list" });
+		
+		const headerRow = wrapper.createDiv({ cls: "vc-directory-header" });
+		headerRow.createEl("label", { text: title, cls: "vc-directory-title" });
+		headerRow.createEl("span", { text: description, cls: "vc-directory-desc" });
+		
+		const listContainer = wrapper.createDiv({ cls: "vc-directory-items" });
+		
+		const renderItems = () => {
+			listContainer.empty();
+			
+			if (directories.length === 0) {
+				listContainer.createEl("span", { 
+					text: "No directories configured",
+					cls: "vc-directory-empty"
+				});
+			} else {
+				for (let i = 0; i < directories.length; i++) {
+					const dir = directories[i];
+					const itemEl = listContainer.createDiv({ cls: "vc-directory-item" });
+					
+					const pathEl = itemEl.createEl("code", { text: dir, cls: "vc-directory-path" });
+					
+					const removeBtn = itemEl.createEl("button", { 
+						cls: "vc-btn-icon vc-btn-remove",
+						attr: { "aria-label": "Remove directory" }
+					});
+					removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+					removeBtn.addEventListener("click", async () => {
+						directories.splice(i, 1);
+						await onUpdate(directories);
+						renderItems();
+					});
+				}
+			}
+		};
+		
+		renderItems();
+		
+		// Add new directory input
+		const addRow = wrapper.createDiv({ cls: "vc-directory-add" });
+		const input = addRow.createEl("input", {
+			type: "text",
+			placeholder: ".copilot/skills or /absolute/path",
+			cls: "vc-directory-input"
+		});
+		
+		const addBtn = addRow.createEl("button", { text: "Add", cls: "vc-btn-secondary vc-btn-sm" });
+		addBtn.addEventListener("click", async () => {
+			const value = input.value.trim();
+			if (value && !directories.includes(value)) {
+				directories.push(value);
+				await onUpdate(directories);
+				input.value = "";
+				renderItems();
+			}
+		});
+		
+		// Allow Enter key to add
+		input.addEventListener("keydown", async (e) => {
+			if (e.key === "Enter") {
+				const value = input.value.trim();
+				if (value && !directories.includes(value)) {
+					directories.push(value);
+					await onUpdate(directories);
+					input.value = "";
+					renderItems();
+				}
+			}
+		});
 	}
 
 	private renderHelpSection(containerEl: HTMLElement): void {
@@ -540,9 +611,9 @@ export class CopilotSettingTab extends PluginSettingTab {
 		const linksDiv = helpContent.createDiv({ cls: "vc-help-links" });
 		
 		const links = [
-			{ text: "Documentation", url: "https://docs.github.com/en/copilot" },
-			{ text: "CLI Guide", url: "https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli" },
-			{ text: "Pricing", url: "https://github.com/features/copilot/plans" },
+			{ text: "GitHub Copilot Documentation", url: "https://docs.github.com/en/copilot" },
+			{ text: "GitHub Copilot CLI Installation Guide", url: "https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-cli" },
+			{ text: "GitHub Copilot Plans & Pricing", url: "https://github.com/features/copilot/plans" },
 		];
 		
 		for (const link of links) {
@@ -565,6 +636,9 @@ export class CopilotSettingTab extends PluginSettingTab {
 			this.skillRegistryUnsubscribe();
 			this.skillRegistryUnsubscribe = null;
 		}
+		
+		// Refresh agent cache when settings panel closes (in case directories changed)
+		this.plugin.agentCache?.refreshCache();
 	}
 }
 

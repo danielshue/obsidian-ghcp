@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "de83bd1aabed3666",
+        "id": "e75dc5d7005c4bd6",
         "type": "tabs",
         "children": [
           {
-            "id": "fe10ba5c6784db35",
+            "id": "897a17b795ea0475",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -74,7 +74,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 358.5
   },
   "right": {
     "id": "8ee59e6ad446e9a5",
@@ -93,86 +93,12 @@
               "icon": "message-square",
               "title": "Vault Copilot"
             }
-          },
-          {
-            "id": "2bae1423ca086239",
-            "type": "leaf",
-            "state": {
-              "type": "backlink",
-              "state": {
-                "collapseAll": false,
-                "extraContext": false,
-                "sortOrder": "alphabetical",
-                "showSearch": false,
-                "searchQuery": "",
-                "backlinkCollapsed": false,
-                "unlinkedCollapsed": true
-              },
-              "icon": "links-coming-in",
-              "title": "Backlinks"
-            }
-          },
-          {
-            "id": "c490e8498442e4a7",
-            "type": "leaf",
-            "state": {
-              "type": "outgoing-link",
-              "state": {
-                "linksCollapsed": false,
-                "unlinkedCollapsed": true
-              },
-              "icon": "links-going-out",
-              "title": "Outgoing links"
-            }
-          },
-          {
-            "id": "98296e36e0e712f0",
-            "type": "leaf",
-            "state": {
-              "type": "tag",
-              "state": {
-                "sortOrder": "frequency",
-                "useHierarchy": true,
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-tags",
-              "title": "Tags"
-            }
-          },
-          {
-            "id": "51d8063c4dc865b9",
-            "type": "leaf",
-            "state": {
-              "type": "all-properties",
-              "state": {
-                "sortOrder": "frequency",
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-archive",
-              "title": "All properties"
-            }
-          },
-          {
-            "id": "232d0e437c0793c1",
-            "type": "leaf",
-            "state": {
-              "type": "outline",
-              "state": {
-                "followCursor": false,
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-list",
-              "title": "Outline"
-            }
           }
         ]
       }
     ],
     "direction": "horizontal",
-    "width": 676.5
+    "width": 584.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -188,15 +114,41 @@
   },
   "active": "71bf5daed2457574",
   "lastOpenFiles": [
-    "Daily Notes/2026-01-28.md",
+    "Projects/Meeting - Project Alpha and Beta - 2026-01-30.md",
     "Projects/Project Alpha.md",
-    "Daily Notes/2026-01-27.md",
     "Projects/Project Beta.md",
-    "Reference/AI Integration Patterns.md",
-    "Reference/Getting Started.md",
+    "MyOtherCustomAgents/meeting-notes.agent.md",
+    "Reference/Skills/obsidian-tasks/skill.md",
+    "Reference/Skills/obsidian-task/skill.md",
+    "Reference/Skills/obsidian-tasks",
+    "Reference/Skills/obsidian-task/obsidian-tasks.skill.md",
+    "Reference/Skills/obsidian-task",
     "Welcome.md",
-    "Test.md",
-    "Test Note.md",
-    "Test Message.md"
+    "copilot-instructions.md",
+    "MyOtherCustomAgents/project-planner.agent.md",
+    "MyOtherCustomAgents/learning-companion.agent.md",
+    "MyOtherCustomAgents/daily-journal.agent.md",
+    "MyOtherCustomAgents",
+    "MyCustomAgent",
+    "Reference/Getting Started.md",
+    "Reference/AI Integration Patterns.md",
+    "Reference/Instructions/documentation.instructions.md",
+    "Reference/Instructions/coding-standards.instructions.md",
+    "Reference/Agents/research-assistant.agent.md",
+    "Reference/Agents/readme-specialist.agent.md",
+    "Reference/Agents/vault-organizer.agent.md",
+    "Reference/Agents",
+    "Reference/Instructions",
+    "Reference/Skills/webapp-testing/SKILL.md",
+    "Reference/Skills/github-actions-debugging/SKILL.md",
+    "Reference/Skills/webapp-testing",
+    "Reference/Skills/github-actions-debugging",
+    "Reference/Skills",
+    "Instructions/documentation.instructions.md",
+    "Instructions/coding-standards.instructions.md",
+    "Instructions",
+    "Skills/webapp-testing/SKILL.md",
+    "Skills/github-actions-debugging/SKILL.md",
+    "Agents/research-assistant.agent.md"
   ]
 }
