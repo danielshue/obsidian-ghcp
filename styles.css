@@ -3137,3 +3137,81 @@
 	white-space: pre-wrap;
 	word-break: break-all;
 }
+
+/* ================================
+   VOICE CHAT - Recording Button States
+   ================================ */
+
+/* Voice Button Base */
+.vc-voice-btn {
+	position: relative;
+	transition: color 0.15s, transform 0.1s;
+}
+
+/* Recording State - Red pulsing */
+.vc-voice-btn.vc-voice-recording {
+	color: var(--color-red) !important;
+	animation: vc-voice-pulse 1.5s ease-in-out infinite;
+}
+
+.vc-voice-btn.vc-voice-recording:hover {
+	color: var(--color-red) !important;
+}
+
+@keyframes vc-voice-pulse {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.7;
+		transform: scale(1.1);
+	}
+}
+
+/* Processing State - Spinning */
+.vc-voice-btn.vc-voice-processing {
+	color: var(--interactive-accent) !important;
+	pointer-events: none;
+}
+
+.vc-voice-btn.vc-voice-processing svg {
+	animation: vc-spin 1s linear infinite;
+}
+
+/* Error State - Brief red flash */
+.vc-voice-btn.vc-voice-error {
+	color: var(--color-red) !important;
+	animation: vc-voice-error-flash 0.5s ease-out;
+}
+
+@keyframes vc-voice-error-flash {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.3;
+	}
+}
+
+/* Recording indicator dot (optional visual enhancement) */
+.vc-voice-btn.vc-voice-recording::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	width: 6px;
+	height: 6px;
+	background: var(--color-red);
+	border-radius: 50%;
+	animation: vc-recording-dot 1s ease-in-out infinite;
+}
+
+@keyframes vc-recording-dot {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.3;
+	}
+}
