@@ -28,6 +28,6 @@
 	"dependencies": {
 		"obsidian": "latest",
 		"@github/copilot-sdk": "latest",
-		"@timur00kh/whisper.wasm": "canary"
+		"openai": "^4.77.0"
 	}
 }

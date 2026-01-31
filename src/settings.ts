@@ -7,6 +7,8 @@ import { DiscoveredMcpServer, isStdioConfig, McpConnectionStatus, McpServerSourc
 import { getSourceLabel, getSourceIcon } from "./copilot/McpManager";
 import { ToolCatalog } from "./copilot/ToolCatalog";
 import { ToolPickerModal } from "./ui/ChatView";
+import { AIProviderType, getOpenAIApiKey } from "./copilot/AIProvider";
+import { OpenAIService } from "./copilot/OpenAIService";
 
 // Robot mascot logo (base64 encoded PNG, 48x48)
 const COPILOT_LOGO_DATA_URL = "data:image/png;base64,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";
@@ -29,7 +31,26 @@ export interface CopilotSession {
 	};
 }
 
+export interface OpenAISettings {
+	/** Whether OpenAI is enabled */
+	enabled: boolean;
+	/** OpenAI API key (optional if OPENAI_API_KEY env var is set) */
+	apiKey: string;
+	/** OpenAI model to use */
+	model: string;
+	/** Base URL for OpenAI API (optional, for Azure or custom endpoints) */
+	baseURL: string;
+	/** Organization ID (optional) */
+	organization: string;
+	/** Max tokens for completion */
+	maxTokens: number;
+	/** Temperature (0-2) */
+	temperature: number;
+}
+
 export interface CopilotPluginSettings {
+	/** AI provider to use: 'copilot' or 'openai' */
+	aiProvider: AIProviderType;
 	model: string;
 	cliPath: string;
 	cliUrl: string;
@@ -49,9 +70,27 @@ export interface CopilotPluginSettings {
 	defaultEnabledTools?: string[];
 	/** Default disabled tools */
 	defaultDisabledTools?: string[];
+	/** Voice chat settings */
+	voice?: {
+		/** Voice backend: 'openai-whisper' or 'local-whisper' */
+		backend: 'openai-whisper' | 'local-whisper';
+		/** URL of the local whisper.cpp server */
+		whisperServerUrl: string;
+		/** Language for voice recognition */
+		language: string;
+		/** Selected audio input device ID */
+		audioDeviceId?: string;
+		/** Auto synthesize: read responses aloud when voice was used as input */
+		autoSynthesize?: 'off' | 'on';
+		/** Speech timeout in milliseconds (0 to disable) */
+		speechTimeout?: number;
+	};
+	/** OpenAI settings */
+	openai: OpenAISettings;
 }
 
 export const DEFAULT_SETTINGS: CopilotPluginSettings = {
+	aiProvider: "copilot",
 	model: "gpt-4.1",
 	cliPath: "",
 	cliUrl: "",
@@ -63,6 +102,22 @@ export const DEFAULT_SETTINGS: CopilotPluginSettings = {
 	agentDirectories: [],
 	instructionDirectories: [],
 	promptDirectories: ["Reference/Prompts"],
+	voice: {
+		backend: 'openai-whisper',
+		whisperServerUrl: 'http://127.0.0.1:8080',
+		language: 'auto',
+		autoSynthesize: 'off',
+		speechTimeout: 0,
+	},
+	openai: {
+		enabled: false,
+		apiKey: "",
+		model: "gpt-4o",
+		baseURL: "",
+		organization: "",
+		maxTokens: 4096,
+		temperature: 0.7,
+	},
 };
 
 export const AVAILABLE_MODELS = [
@@ -290,39 +345,37 @@ export class CopilotSettingTab extends PluginSettingTab {
 		if (!this.mainSettingsContainer) return;
 		this.mainSettingsContainer.empty();
 
-		if (!status.installed) {
-			return; // Don't show main settings if CLI not installed
+		// Vault Initialization Section - only if CLI is installed
+		if (status.installed) {
+			const initSection = this.mainSettingsContainer.createDiv({ cls: "vc-settings-section" });
+			initSection.createEl("h3", { text: "Vault Setup" });
+			
+			const initDesc = initSection.createEl("p", { 
+				text: "Initialize GitHub Copilot for this vault to enable context-aware assistance.",
+				cls: "vc-status-desc"
+			});
+			
+			const initBtnRow = initSection.createDiv({ cls: "vc-btn-row" });
+			const initBtn = initBtnRow.createEl("button", { text: "Initialize Vault", cls: "vc-btn-primary" });
+			initBtn.addEventListener("click", async () => {
+				const vaultPath = this.getVaultPath();
+				if (!vaultPath) {
+					new Notice("Could not determine vault path");
+					return;
+				}
+				initBtn.disabled = true;
+				initBtn.textContent = "Initializing...";
+				const result = await this.cliManager.initializeVault(vaultPath);
+				initBtn.disabled = false;
+				initBtn.textContent = "Initialize Vault";
+			});
+			
+			const cmdPreview = initSection.createDiv({ cls: "vc-cmd-group" });
+			cmdPreview.createEl("label", { text: "Command that will be run:" });
+			const vaultPath = this.getVaultPath() || "<vault_path>";
+			const normalizedPath = vaultPath.replace(/\\/g, "/");
+			cmdPreview.createEl("code", { text: `copilot --add-dir "${normalizedPath}"`, cls: "vc-code-block" });
 		}
-
-		// Vault Initialization Section
-		const initSection = this.mainSettingsContainer.createDiv({ cls: "vc-settings-section" });
-		initSection.createEl("h3", { text: "Vault Setup" });
-		
-		const initDesc = initSection.createEl("p", { 
-			text: "Initialize GitHub Copilot for this vault to enable context-aware assistance.",
-			cls: "vc-status-desc"
-		});
-		
-		const initBtnRow = initSection.createDiv({ cls: "vc-btn-row" });
-		const initBtn = initBtnRow.createEl("button", { text: "Initialize Vault", cls: "vc-btn-primary" });
-		initBtn.addEventListener("click", async () => {
-			const vaultPath = this.getVaultPath();
-			if (!vaultPath) {
-				new Notice("Could not determine vault path");
-				return;
-			}
-			initBtn.disabled = true;
-			initBtn.textContent = "Initializing...";
-			const result = await this.cliManager.initializeVault(vaultPath);
-			initBtn.disabled = false;
-			initBtn.textContent = "Initialize Vault";
-		});
-		
-		const cmdPreview = initSection.createDiv({ cls: "vc-cmd-group" });
-		cmdPreview.createEl("label", { text: "Command that will be run:" });
-		const vaultPath = this.getVaultPath() || "<vault_path>";
-		const normalizedPath = vaultPath.replace(/\\/g, "/");
-		cmdPreview.createEl("code", { text: `copilot --add-dir "${normalizedPath}"`, cls: "vc-code-block" });
 
 		// Chat Preferences Section
 		const section = this.mainSettingsContainer.createDiv({ cls: "vc-settings-section" });
@@ -394,6 +447,300 @@ export class CopilotSettingTab extends PluginSettingTab {
 						modal.open();
 					});
 			});
+
+		// Voice Chat Settings Section
+		this.renderVoiceSettings(this.mainSettingsContainer);
+	}
+
+	private renderVoiceSettings(container: HTMLElement): void {
+		const voiceSection = container.createDiv({ cls: "vc-settings-section" });
+		voiceSection.createEl("h3", { text: "Voice Input" });
+		
+		voiceSection.createEl("p", { 
+			text: "Configure voice-to-text for hands-free chat input.",
+			cls: "vc-status-desc"
+		});
+
+		// Ensure voice settings exist
+		if (!this.plugin.settings.voice) {
+			this.plugin.settings.voice = {
+				backend: 'openai-whisper',
+				whisperServerUrl: 'http://127.0.0.1:8080',
+				language: 'auto',
+				audioDeviceId: undefined,
+				autoSynthesize: 'off',
+				speechTimeout: 0,
+			};
+		}
+
+		// 1. Audio device selection (Microphone) - FIRST
+		const audioDeviceSetting = new Setting(voiceSection)
+			.setName("Microphone")
+			.setDesc("Select the audio input device");
+		
+		this.populateAudioDevices(audioDeviceSetting);
+
+		// 2. Voice language (common to all backends) - SECOND
+		new Setting(voiceSection)
+			.setName("Speech Language")
+			.setDesc("The language that text-to-speech and speech-to-text should use. Select 'auto' to use the configured display language if possible. Note that not all display languages may be supported by speech recognition and synthesizers.")
+			.addDropdown((dropdown) => {
+				const languages = [
+					{ value: 'auto', name: 'Auto (Use Display Language)' },
+					{ value: 'en-US', name: 'English (US)' },
+					{ value: 'en-GB', name: 'English (UK)' },
+					{ value: 'es-ES', name: 'Spanish' },
+					{ value: 'fr-FR', name: 'French' },
+					{ value: 'de-DE', name: 'German' },
+					{ value: 'it-IT', name: 'Italian' },
+					{ value: 'pt-BR', name: 'Portuguese (Brazil)' },
+					{ value: 'ja-JP', name: 'Japanese' },
+					{ value: 'zh-CN', name: 'Chinese (Simplified)' },
+					{ value: 'ko-KR', name: 'Korean' },
+				];
+				for (const lang of languages) {
+					dropdown.addOption(lang.value, lang.name);
+				}
+				dropdown.setValue(this.plugin.settings.voice!.language);
+				dropdown.onChange(async (value) => {
+					this.plugin.settings.voice!.language = value;
+					await this.plugin.saveSettings();
+				});
+			});
+
+		// 3. Auto Synthesize - read responses aloud
+		new Setting(voiceSection)
+			.setName("Auto Synthesize")
+			.setDesc("Whether a textual response should automatically be read out aloud when speech was used as input. For example in a chat session, a response is automatically synthesized when voice was used as chat request.")
+			.addDropdown((dropdown) => {
+				dropdown.addOption('off', 'off');
+				dropdown.addOption('on', 'on');
+				dropdown.setValue(this.plugin.settings.voice!.autoSynthesize || 'off');
+				dropdown.onChange(async (value) => {
+					this.plugin.settings.voice!.autoSynthesize = value as 'off' | 'on';
+					await this.plugin.saveSettings();
+				});
+			});
+
+		// 4. Speech Timeout
+		new Setting(voiceSection)
+			.setName("Speech Timeout")
+			.setDesc("The duration in milliseconds that voice speech recognition remains active after you stop speaking. For example in a chat session, the transcribed text is submitted automatically after the timeout is met. Set to 0 to disable this feature.")
+			.addText((text) => {
+				text.setPlaceholder('0');
+				text.setValue(String(this.plugin.settings.voice!.speechTimeout || 0));
+				text.inputEl.type = 'number';
+				text.inputEl.min = '0';
+				text.onChange(async (value) => {
+					const timeout = parseInt(value, 10) || 0;
+					this.plugin.settings.voice!.speechTimeout = timeout;
+					await this.plugin.saveSettings();
+				});
+			});
+
+		// Container for conditional settings (created before backend dropdown so we can reference it)
+		const conditionalContainer = voiceSection.createDiv({ cls: "vc-voice-conditional" });
+
+		// 5. Voice backend selection
+		new Setting(voiceSection)
+			.setName("Voice Backend")
+			.setDesc("Choose the speech-to-text service")
+			.addDropdown((dropdown) => {
+				dropdown.addOption('openai-whisper', 'OpenAI Whisper API (recommended)');
+				dropdown.addOption('local-whisper', 'Local Whisper Server');
+				dropdown.setValue(this.plugin.settings.voice!.backend);
+				dropdown.onChange(async (value) => {
+					this.plugin.settings.voice!.backend = value as 'openai-whisper' | 'local-whisper';
+					await this.plugin.saveSettings();
+					// Re-render conditional settings
+					this.renderVoiceConditionalSettings(conditionalContainer);
+				});
+			});
+
+		// Move conditional container to appear after the backend dropdown
+		voiceSection.appendChild(conditionalContainer);
+
+		// Render conditional settings based on backend
+		this.renderVoiceConditionalSettings(conditionalContainer);
+	}
+
+	private async populateAudioDevices(setting: Setting): Promise<void> {
+		setting.addDropdown(async (dropdown) => {
+			dropdown.addOption('default', 'System Default');
+			
+			try {
+				// Request microphone permission first (required to enumerate devices)
+				await navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+					stream.getTracks().forEach(track => track.stop());
+				});
+				
+				const devices = await navigator.mediaDevices.enumerateDevices();
+				const audioInputs = devices.filter(d => d.kind === 'audioinput');
+				
+				for (const device of audioInputs) {
+					const label = device.label || `Microphone ${audioInputs.indexOf(device) + 1}`;
+					dropdown.addOption(device.deviceId, label);
+				}
+			} catch (error) {
+				console.log('Could not enumerate audio devices:', error);
+			}
+			
+			dropdown.setValue(this.plugin.settings.voice?.audioDeviceId || 'default');
+			dropdown.onChange(async (value) => {
+				if (this.plugin.settings.voice) {
+					this.plugin.settings.voice.audioDeviceId = value === 'default' ? undefined : value;
+					await this.plugin.saveSettings();
+				}
+			});
+		});
+	}
+
+	private renderVoiceConditionalSettings(container: HTMLElement): void {
+		container.empty();
+		const backend = this.plugin.settings.voice?.backend || 'openai-whisper';
+
+		if (backend === 'openai-whisper') {
+			// OpenAI Whisper settings
+			const openaiSection = container.createDiv({ cls: "vc-voice-openai-settings" });
+			openaiSection.createEl("h4", { text: "OpenAI Whisper Settings" });
+			
+			// API Key status indicator
+			const apiKeyFromEnv = getOpenAIApiKey();
+			const hasEnvKey = !!apiKeyFromEnv && !this.plugin.settings.openai.apiKey;
+			
+			if (hasEnvKey) {
+				const envNotice = openaiSection.createDiv({ cls: "vc-openai-env-notice" });
+				envNotice.innerHTML = `
+					<span class="vc-status-ok">✓</span>
+					<span>Using API key from <code>OPENAI_API_KEY</code> environment variable</span>
+				`;
+			}
+
+			// API Key input
+			new Setting(openaiSection)
+				.setName("API Key")
+				.setDesc(hasEnvKey 
+					? "Override the environment variable with a custom key (optional)" 
+					: "Enter your OpenAI API key, or set OPENAI_API_KEY environment variable")
+				.addText((text) => {
+					text.setPlaceholder(hasEnvKey ? "(using env variable)" : "sk-...");
+					text.setValue(this.plugin.settings.openai.apiKey);
+					text.inputEl.type = "password";
+					text.onChange(async (value) => {
+						this.plugin.settings.openai.apiKey = value;
+						await this.plugin.saveSettings();
+					});
+				})
+				.addButton((button) => {
+					button.setButtonText("Test");
+					button.onClick(async () => {
+						button.setDisabled(true);
+						button.setButtonText("...");
+						try {
+							const service = new OpenAIService(this.app, {
+								provider: "openai",
+								model: this.plugin.settings.openai.model,
+								streaming: this.plugin.settings.streaming,
+								apiKey: this.plugin.settings.openai.apiKey || undefined,
+								baseURL: this.plugin.settings.openai.baseURL || undefined,
+							});
+							const result = await service.testConnection();
+							if (result.success) {
+								new Notice("✓ OpenAI connection successful!");
+							} else {
+								new Notice(`✗ Connection failed: ${result.error}`);
+							}
+							await service.destroy();
+						} catch (error) {
+							new Notice(`✗ Error: ${error instanceof Error ? error.message : String(error)}`);
+						}
+						button.setButtonText("Test");
+						button.setDisabled(false);
+					});
+				});
+
+			// Base URL (optional)
+			new Setting(openaiSection)
+				.setName("Base URL")
+				.setDesc("Custom API endpoint (optional, for Azure or compatible APIs)")
+				.addText((text) => {
+					text.setPlaceholder("https://api.openai.com/v1");
+					text.setValue(this.plugin.settings.openai.baseURL);
+					text.onChange(async (value) => {
+						this.plugin.settings.openai.baseURL = value;
+						await this.plugin.saveSettings();
+					});
+				});
+
+			// Help text
+			const helpEl = openaiSection.createDiv({ cls: "vc-openai-help" });
+			helpEl.innerHTML = `
+				<details>
+					<summary>Getting an OpenAI API Key</summary>
+					<ol>
+						<li>Visit <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a></li>
+						<li>Create a new secret key</li>
+						<li>Copy and paste here, or set <code>OPENAI_API_KEY</code> environment variable</li>
+					</ol>
+				</details>
+			`;
+
+		} else if (backend === 'local-whisper') {
+			// Local Whisper settings
+			const localSection = container.createDiv({ cls: "vc-voice-local-settings" });
+			localSection.createEl("h4", { text: "Local Whisper Server Settings" });
+
+			// Whisper server URL
+			new Setting(localSection)
+				.setName("Server URL")
+				.setDesc("URL of your local whisper.cpp server")
+				.addText((text) => {
+					text.setPlaceholder('http://127.0.0.1:8080');
+					text.setValue(this.plugin.settings.voice!.whisperServerUrl);
+					text.onChange(async (value) => {
+						this.plugin.settings.voice!.whisperServerUrl = value || 'http://127.0.0.1:8080';
+						await this.plugin.saveSettings();
+					});
+				})
+				.addButton((button) => {
+					button.setButtonText("Test");
+					button.onClick(async () => {
+						button.setDisabled(true);
+						button.setButtonText("...");
+						try {
+							const url = this.plugin.settings.voice?.whisperServerUrl || 'http://127.0.0.1:8080';
+							const response = await fetch(url, { method: 'GET' });
+							if (response.ok || response.status === 404) {
+								new Notice("✓ Whisper server is reachable!");
+							} else {
+								new Notice(`✗ Server returned status ${response.status}`);
+							}
+						} catch (error) {
+							new Notice(`✗ Could not connect to server: ${error instanceof Error ? error.message : String(error)}`);
+						}
+						button.setButtonText("Test");
+						button.setDisabled(false);
+					});
+				});
+
+			// Setup instructions
+			const setupDetails = localSection.createEl("details", { cls: "vc-voice-setup" });
+			setupDetails.createEl("summary", { text: "How to set up local whisper server" });
+			
+			const setupContent = setupDetails.createDiv({ cls: "vc-voice-setup-content" });
+			setupContent.innerHTML = `
+				<p>Uses <a href="https://github.com/ggerganov/whisper.cpp" target="_blank">whisper.cpp</a> for offline speech recognition.</p>
+				<h5>Quick Start:</h5>
+				<ol>
+					<li>Download whisper.cpp from <a href="https://github.com/ggerganov/whisper.cpp/releases" target="_blank">releases</a></li>
+					<li>Download a model (e.g., <code>ggml-base.en.bin</code>) from <a href="https://huggingface.co/ggerganov/whisper.cpp/tree/main" target="_blank">Hugging Face</a></li>
+					<li>Run: <code>whisper-server -m ggml-base.en.bin --convert</code></li>
+				</ol>
+				<h5>Alternative: Docker</h5>
+				<pre><code>docker run -p 8080:8080 ghcr.io/ggerganov/whisper.cpp:main-cuda \\
+  -m models/ggml-base.en.bin --convert</code></pre>
+			`;
+		}
 	}
 
 	private updateToolSummary(container: HTMLElement): void {

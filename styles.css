@@ -341,10 +341,12 @@
 .vc-message-actions {
 	display: flex;
 	justify-content: flex-end;
+	gap: 4px;
 	margin-top: 8px;
 	padding-top: 4px;
 }
 
+.vc-speaker-btn,
 .vc-copy-btn {
 	background: transparent !important;
 	border: none !important;
@@ -360,9 +362,25 @@
 	box-shadow: none !important;
 }
 
+.vc-speaker-btn:hover,
 .vc-copy-btn:hover {
 	color: var(--text-normal);
 	background: var(--background-modifier-hover) !important;
+}
+
+.vc-speaker-btn:disabled,
+.vc-copy-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.vc-spinner {
+	animation: vc-spin 1s linear infinite;
+}
+
+@keyframes vc-spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }
 
 .vc-message-content p:first-child {

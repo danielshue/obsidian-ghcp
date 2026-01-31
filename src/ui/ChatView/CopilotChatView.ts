@@ -109,13 +109,21 @@ export class CopilotChatView extends ItemView {
 			(toolName, args) => this.executeTool(toolName, args)
 		);
 		
-		// Initialize VoiceChatService
+		// Initialize VoiceChatService with settings
+		const voiceSettings = this.plugin.settings.voice || {
+			backend: 'openai-whisper',
+			whisperServerUrl: 'http://127.0.0.1:8080',
+			language: 'en-US',
+			audioDeviceId: undefined,
+		};
+		const openaiSettings = this.plugin.settings.openai;
 		this.voiceChatService = new VoiceChatService({
-			whisper: {
-				model: 'base',
-				language: 'en',
-			},
-			showNotices: true,
+			backend: voiceSettings.backend,
+			whisperServerUrl: voiceSettings.whisperServerUrl,
+			language: voiceSettings.language,
+			openaiApiKey: openaiSettings?.apiKey || undefined,
+			openaiBaseUrl: openaiSettings?.baseURL || undefined,
+			audioDeviceId: voiceSettings.audioDeviceId,
 		});
 	}
 
@@ -488,19 +496,23 @@ export class CopilotChatView extends ItemView {
 	 */
 	private async handleVoiceInput(): Promise<void> {
 		if (!this.voiceChatService) {
-			new Notice('Voice input is not available');
+			console.error('Voice input is not available');
 			return;
 		}
 
 		const state = this.voiceChatService.getState();
+		console.log('VoiceInput: Current state:', state);
 
 		if (state === 'recording') {
 			// Stop recording and transcribe
 			try {
 				const result = await this.voiceChatService.stopRecording();
+				console.log('VoiceInput: Got result:', result);
 				if (result.text) {
 					// Insert transcribed text into input
 					this.insertTextAtCursor(result.text);
+				} else {
+					console.log('VoiceInput: No text in result');
 				}
 			} catch (error) {
 				console.error('Voice transcription failed:', error);
@@ -520,27 +532,26 @@ export class CopilotChatView extends ItemView {
 	 * Insert text at the current cursor position in the input
 	 */
 	private insertTextAtCursor(text: string): void {
+		console.log('insertTextAtCursor: Inserting text:', text);
+		
+		// Get existing text and append new text
+		const existingText = this.inputEl.textContent || '';
+		const newText = existingText ? existingText + ' ' + text : text;
+		this.inputEl.textContent = newText;
+		
+		// Move cursor to end
+		const range = document.createRange();
 		const selection = window.getSelection();
-		if (selection && selection.rangeCount > 0) {
-			const range = selection.getRangeAt(0);
-			if (this.inputEl.contains(range.commonAncestorContainer)) {
-				const textNode = document.createTextNode(text);
-				range.deleteContents();
-				range.insertNode(textNode);
-				range.setStartAfter(textNode);
-				range.setEndAfter(textNode);
-				selection.removeAllRanges();
-				selection.addRange(range);
-			} else {
-				// Cursor not in input, append at end
-				this.inputEl.appendChild(document.createTextNode(text));
-			}
-		} else {
-			// No selection, append at end
-			this.inputEl.appendChild(document.createTextNode(text));
+		range.selectNodeContents(this.inputEl);
+		range.collapse(false);
+		if (selection) {
+			selection.removeAllRanges();
+			selection.addRange(range);
 		}
+		
 		this.autoResizeInput();
 		this.inputEl.focus();
+		console.log('insertTextAtCursor: Done, input now contains:', this.inputEl.textContent);
 	}
 
 	/**

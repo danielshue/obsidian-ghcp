@@ -107,6 +107,16 @@ export class MessageRenderer {
 		if (!contentEl) return;
 
 		const actionsEl = messageEl.createDiv({ cls: "vc-message-actions" });
+		
+		// Speaker button (TTS) - on the left
+		const speakerBtn = actionsEl.createEl("button", { cls: "vc-speaker-btn", attr: { "aria-label": "Read aloud" } });
+		speakerBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+		speakerBtn.addEventListener("click", async () => {
+			const text = (contentEl as HTMLElement).textContent || "";
+			await this.sendToTTS(text, speakerBtn);
+		});
+
+		// Copy button - on the right
 		const copyBtn = actionsEl.createEl("button", { cls: "vc-copy-btn", attr: { "aria-label": "Copy to clipboard" } });
 		copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 		copyBtn.addEventListener("click", async () => {
@@ -338,5 +348,40 @@ export class MessageRenderer {
 			"link": `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
 		};
 		return icons[name] ?? icons["file"] ?? "";
+	}
+
+	/**
+	 * Send text to TTS server for speech synthesis
+	 * @param text The text to synthesize
+	 * @param button The button element to show visual feedback
+	 */
+	private async sendToTTS(text: string, button: HTMLButtonElement): Promise<void> {
+		if (!text.trim()) {
+			new Notice("No text to read");
+			return;
+		}
+
+		// Show loading state
+		const originalIcon = button.innerHTML;
+		button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vc-spinner"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
+		button.disabled = true;
+
+		try {
+			// TODO: Implement actual TTS server call
+			// This is a stub - replace with actual TTS implementation
+			console.log('TTS stub: Would send text to TTS server:', text.substring(0, 100) + '...');
+			
+			// Placeholder: simulate TTS processing
+			await new Promise(resolve => setTimeout(resolve, 500));
+			
+			new Notice("TTS: Feature coming soon");
+		} catch (error) {
+			console.error('TTS error:', error);
+			new Notice(`TTS error: ${error instanceof Error ? error.message : String(error)}`);
+		} finally {
+			// Restore button state
+			button.innerHTML = originalIcon;
+			button.disabled = false;
+		}
 	}
 }

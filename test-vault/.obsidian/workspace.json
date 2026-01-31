@@ -74,7 +74,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 299.5
+    "width": 230.5
   },
   "right": {
     "id": "8ee59e6ad446e9a5",
@@ -85,7 +85,7 @@
         "type": "tabs",
         "children": [
           {
-            "id": "867ed2832e03d362",
+            "id": "f4349356017f98ec",
             "type": "leaf",
             "state": {
               "type": "copilot-chat-view",
@@ -95,7 +95,7 @@
             }
           },
           {
-            "id": "1a5b9c8fabed2c07",
+            "id": "b91cde966fee60b8",
             "type": "leaf",
             "state": {
               "type": "backlink",
@@ -113,7 +113,7 @@
             }
           },
           {
-            "id": "bc3022cb41fac4a4",
+            "id": "67387b82b4c1a386",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
@@ -126,7 +126,7 @@
             }
           },
           {
-            "id": "35cf49949c89e8bf",
+            "id": "b65f526369c53c50",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -141,7 +141,7 @@
             }
           },
           {
-            "id": "a3b9827255b73a17",
+            "id": "72a8a60febe89b8a",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -155,7 +155,7 @@
             }
           },
           {
-            "id": "2c697eb213868d97",
+            "id": "40c06c139c96674e",
             "type": "leaf",
             "state": {
               "type": "outline",
@@ -172,7 +172,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 540.5
+    "width": 432.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -186,7 +186,7 @@
       "bases:Create new base": false
     }
   },
-  "active": "1d09d6ca0a3c32bc",
+  "active": "f4349356017f98ec",
   "lastOpenFiles": [
     "copilot-instructions.md",
     "Reference/Instructions/documentation.instructions.md",

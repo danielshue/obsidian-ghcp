@@ -1,39 +1,43 @@
 /**
- * VoiceChatService - Main service orchestrating voice recording and transcription
- * Combines VoiceRecorder and WhisperService for end-to-end voice-to-text
+ * VoiceChatService - Main service for voice recording and transcription
+ * Supports multiple backends:
+ * - local-whisper: Uses MediaRecorder + local whisper.cpp server
+ * - openai-whisper: Uses MediaRecorder + OpenAI Whisper API (recommended)
  */
 
-import { Notice } from 'obsidian';
-import { VoiceRecorder } from './VoiceRecorder';
-import { WhisperService } from './WhisperService';
+import { LocalWhisperService } from './LocalWhisperService';
+import { OpenAIWhisperService } from './OpenAIWhisperService';
 import {
 	RecordingState,
 	TranscriptionResult,
 	TranscriptionSegment,
 	VoiceChatEvents,
-	WhisperModel,
-	WhisperServiceConfig,
-	VoiceRecorderConfig,
 } from './types';
 
+export type VoiceBackend = 'local-whisper' | 'openai-whisper';
+
 export interface VoiceChatServiceConfig {
-	/** Whisper configuration */
-	whisper?: WhisperServiceConfig;
-	/** Voice recorder configuration */
-	recorder?: VoiceRecorderConfig;
-	/** Show notices for status updates */
-	showNotices?: boolean;
+	/** Voice backend to use */
+	backend?: VoiceBackend;
+	/** Language code for speech recognition (e.g., 'en-US', 'es-ES', 'en') */
+	language?: string;
+	/** URL of the local whisper server (for local-whisper backend) */
+	whisperServerUrl?: string;
+	/** OpenAI API key (for openai-whisper backend) */
+	openaiApiKey?: string;
+	/** OpenAI base URL (for openai-whisper backend) */
+	openaiBaseUrl?: string;
+	/** Audio input device ID (optional, uses default if not specified) */
+	audioDeviceId?: string;
 }
 
 const DEFAULT_CONFIG: VoiceChatServiceConfig = {
-	whisper: {
-		model: 'base',
-		language: 'en',
-	},
-	recorder: {
-		maxDuration: 60000,
-	},
-	showNotices: true,
+	backend: 'openai-whisper',
+	language: 'en-US',
+	whisperServerUrl: 'http://127.0.0.1:8080',
+	openaiApiKey: undefined,
+	openaiBaseUrl: undefined,
+	audioDeviceId: undefined,
 };
 
 /**
@@ -41,72 +45,125 @@ const DEFAULT_CONFIG: VoiceChatServiceConfig = {
  */
 export class VoiceChatService {
 	private config: VoiceChatServiceConfig;
-	private recorder: VoiceRecorder;
-	private whisper: WhisperService;
+	private localWhisper: LocalWhisperService | null = null;
+	private openaiWhisper: OpenAIWhisperService | null = null;
+	private activeBackend: VoiceBackend | null = null;
 	private state: RecordingState = 'idle';
 	private isInitialized: boolean = false;
 	private listeners: Map<keyof VoiceChatEvents, Set<(...args: unknown[]) => void>> = new Map();
 
 	constructor(config?: VoiceChatServiceConfig) {
 		this.config = { ...DEFAULT_CONFIG, ...config };
-		this.recorder = new VoiceRecorder(this.config.recorder);
-		this.whisper = new WhisperService(this.config.whisper);
-
-		// Connect recorder state changes to our events
-		this.recorder.setStateChangeCallback((recorderState) => {
-			if (recorderState === 'recording' || recorderState === 'idle') {
-				this.setState(recorderState);
-			}
-		});
 	}
 
 	/**
 	 * Check if voice chat is supported
 	 */
 	async isSupported(): Promise<boolean> {
-		const recorderSupported = await this.recorder.isSupported();
-		if (!recorderSupported) {
-			console.log('VoiceChatService: Recording not supported');
-			return false;
+		// Check OpenAI whisper first (preferred)
+		if (this.config.backend === 'openai-whisper') {
+			const openaiWhisper = new OpenAIWhisperService({
+				apiKey: this.config.openaiApiKey,
+				baseURL: this.config.openaiBaseUrl,
+				language: this.config.language?.split('-')[0] || 'en',
+			});
+			if (await openaiWhisper.isSupported()) {
+				return true;
+			}
 		}
 
-		// Note: We don't check Whisper support here as the module might not be installed yet
-		// The actual check happens during initialization
-		return true;
+		// Check local whisper
+		if (this.config.backend === 'local-whisper') {
+			const localWhisper = new LocalWhisperService({
+				serverUrl: this.config.whisperServerUrl,
+				language: this.config.language?.split('-')[0] || 'en',
+			});
+			if (await localWhisper.isSupported()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
-	 * Initialize the service (loads Whisper model)
+	 * Initialize the service
 	 */
 	async initialize(): Promise<void> {
 		if (this.isInitialized) return;
 
-		try {
-			// Check if Whisper is supported
-			const whisperSupported = await this.whisper.isSupported();
-			if (!whisperSupported) {
-				throw new Error('WebAssembly is not supported in this environment');
+		// Try OpenAI whisper first (preferred)
+		if (this.config.backend === 'openai-whisper') {
+			try {
+				this.openaiWhisper = new OpenAIWhisperService({
+					apiKey: this.config.openaiApiKey,
+					baseURL: this.config.openaiBaseUrl,
+					language: this.config.language?.split('-')[0] || 'en',
+					audioDeviceId: this.config.audioDeviceId,
+				});
+				
+				if (await this.openaiWhisper.isSupported()) {
+					await this.openaiWhisper.initialize();
+					this.activeBackend = 'openai-whisper';
+					this.isInitialized = true;
+					console.log('VoiceChatService: Initialized with openai-whisper backend');
+					return;
+				} else {
+					console.log('VoiceChatService: OpenAI Whisper not available, falling back');
+				}
+			} catch (error) {
+				console.log('VoiceChatService: OpenAI Whisper init failed, falling back:', error);
 			}
-
-			// Initialize Whisper with model loading progress
-			if (this.config.showNotices) {
-				new Notice('Loading voice recognition model...');
-			}
-
-			await this.whisper.initialize((progress) => {
-				this.emit('modelProgress', progress);
-			});
-
-			this.isInitialized = true;
-
-			if (this.config.showNotices) {
-				new Notice('Voice recognition ready!');
-			}
-		} catch (error) {
-			this.setState('error');
-			this.emit('error', error instanceof Error ? error : new Error(String(error)));
-			throw error;
 		}
+
+		// Try local whisper
+		if (this.config.backend === 'local-whisper' || this.config.backend === 'openai-whisper') {
+			try {
+				this.localWhisper = new LocalWhisperService({
+					serverUrl: this.config.whisperServerUrl,
+					language: this.config.language?.split('-')[0] || 'en',
+					audioDeviceId: this.config.audioDeviceId,
+				});
+				
+				if (await this.localWhisper.isSupported()) {
+					// Check if server is reachable
+					const serverOk = await this.localWhisper.checkServerConnection();
+					if (serverOk) {
+						await this.localWhisper.initialize();
+						this.activeBackend = 'local-whisper';
+						this.isInitialized = true;
+						console.log('VoiceChatService: Initialized with local-whisper backend');
+						return;
+					} else {
+						console.log('VoiceChatService: Local whisper server not reachable');
+					}
+				}
+			} catch (error) {
+				console.log('VoiceChatService: Local whisper init failed:', error);
+			}
+		}
+
+		throw new Error('No voice backend available. Configure OpenAI API key or ensure whisper.cpp server is running.');
+	}
+
+	/**
+	 * Get the active backend
+	 */
+	getActiveBackend(): VoiceBackend | null {
+		return this.activeBackend;
+	}
+
+	/**
+	 * Check if local whisper server is connected
+	 */
+	async checkLocalWhisperServer(): Promise<boolean> {
+		if (this.localWhisper) {
+			return await this.localWhisper.checkServerConnection();
+		}
+		const temp = new LocalWhisperService({
+			serverUrl: this.config.whisperServerUrl,
+		});
+		return await temp.checkServerConnection();
 	}
 
 	/**
@@ -118,29 +175,24 @@ export class VoiceChatService {
 		}
 
 		try {
-			// Ensure microphone permission
-			const hasPermission = await this.recorder.requestPermission();
-			if (!hasPermission) {
-				throw new Error('Microphone permission denied');
-			}
-
-			// Initialize Whisper if not already done
+			// Initialize if not already done
 			if (!this.isInitialized) {
 				await this.initialize();
 			}
 
-			await this.recorder.startRecording();
+			this.setState('recording');
+			console.log(`VoiceChatService: Recording started (backend: ${this.activeBackend})`);
 
-			if (this.config.showNotices) {
-				new Notice('Recording... Click again to stop');
+			if (this.activeBackend === 'openai-whisper' && this.openaiWhisper) {
+				// OpenAI whisper: just start recording, transcription happens on stop
+				await this.openaiWhisper.startRecording();
+			} else if (this.activeBackend === 'local-whisper' && this.localWhisper) {
+				// Local whisper: just start recording, transcription happens on stop
+				await this.localWhisper.startRecording();
 			}
 		} catch (error) {
 			this.setState('error');
 			this.emit('error', error instanceof Error ? error : new Error(String(error)));
-			
-			if (this.config.showNotices) {
-				new Notice(`Recording failed: ${error instanceof Error ? error.message : String(error)}`);
-			}
 			throw error;
 		}
 	}
@@ -155,36 +207,25 @@ export class VoiceChatService {
 
 		try {
 			this.setState('processing');
+			console.log('VoiceChatService: Stopping recording...');
 
-			if (this.config.showNotices) {
-				new Notice('Processing audio...');
+			let result: TranscriptionResult = { text: '', segments: [], transcribeDurationMs: 0 };
+
+			if (this.activeBackend === 'openai-whisper' && this.openaiWhisper) {
+				// OpenAI whisper: stop recording and transcribe via API
+				result = await this.openaiWhisper.stopRecording();
+			} else if (this.activeBackend === 'local-whisper' && this.localWhisper) {
+				// Local whisper: stop recording and transcribe via server
+				result = await this.localWhisper.stopRecording();
 			}
-
-			// Stop recording and get audio data
-			const recording = await this.recorder.stopRecording();
-
-			// Transcribe the audio
-			const result = await this.whisper.transcribe(
-				recording.audioData,
-				(segment) => {
-					this.emit('segment', segment);
-				}
-			);
 
 			this.setState('idle');
-
-			if (this.config.showNotices && result.text) {
-				new Notice('Transcription complete!');
-			}
+			console.log('VoiceChatService: Transcription result:', result.text);
 
 			return result;
 		} catch (error) {
 			this.setState('error');
 			this.emit('error', error instanceof Error ? error : new Error(String(error)));
-			
-			if (this.config.showNotices) {
-				new Notice(`Transcription failed: ${error instanceof Error ? error.message : String(error)}`);
-			}
 			throw error;
 		}
 	}
@@ -193,12 +234,13 @@ export class VoiceChatService {
 	 * Cancel recording without transcription
 	 */
 	cancelRecording(): void {
-		this.recorder.cancelRecording();
-		this.setState('idle');
-
-		if (this.config.showNotices) {
-			new Notice('Recording cancelled');
+		if (this.activeBackend === 'openai-whisper' && this.openaiWhisper) {
+			this.openaiWhisper.cancelRecording();
+		} else if (this.activeBackend === 'local-whisper' && this.localWhisper) {
+			this.localWhisper.cancelRecording();
 		}
+		this.setState('idle');
+		console.log('VoiceChatService: Recording cancelled');
 	}
 
 	/**
@@ -229,27 +271,55 @@ export class VoiceChatService {
 	}
 
 	/**
-	 * Get available Whisper models
+	 * Update language setting
 	 */
-	async getAvailableModels(): Promise<{ id: WhisperModel; name: string; size: number }[]> {
-		return await this.whisper.getAvailableModels();
+	setLanguage(language: string): void {
+		this.config.language = language;
+		if (this.localWhisper) {
+			this.localWhisper.updateConfig({ language: language.split('-')[0] });
+		}
+		if (this.openaiWhisper) {
+			this.openaiWhisper.updateConfig({ language: language.split('-')[0] });
+		}
 	}
 
 	/**
-	 * Change the Whisper model
+	 * Update whisper server URL
 	 */
-	async setModel(model: WhisperModel): Promise<void> {
-		if (this.config.showNotices) {
-			new Notice(`Loading ${model} model...`);
+	setWhisperServerUrl(url: string): void {
+		this.config.whisperServerUrl = url;
+		if (this.localWhisper) {
+			this.localWhisper.updateConfig({ serverUrl: url });
 		}
+	}
 
-		await this.whisper.setModel(model, (progress) => {
-			this.emit('modelProgress', progress);
+	/**
+	 * Get current whisper server URL
+	 */
+	getWhisperServerUrl(): string {
+		return this.config.whisperServerUrl || DEFAULT_CONFIG.whisperServerUrl!;
+	}
+
+	/**
+	 * Update OpenAI settings
+	 */
+	setOpenAIConfig(apiKey?: string, baseUrl?: string): void {
+		this.config.openaiApiKey = apiKey;
+		this.config.openaiBaseUrl = baseUrl;
+		if (this.openaiWhisper) {
+			this.openaiWhisper.updateConfig({ apiKey, baseURL: baseUrl });
+		}
+	}
+
+	/**
+	 * Check if OpenAI Whisper is available
+	 */
+	async checkOpenAIWhisper(): Promise<boolean> {
+		const openaiWhisper = new OpenAIWhisperService({
+			apiKey: this.config.openaiApiKey,
+			baseURL: this.config.openaiBaseUrl,
 		});
-
-		if (this.config.showNotices) {
-			new Notice(`${model} model loaded!`);
-		}
+		return await openaiWhisper.isSupported();
 	}
 
 	/**
@@ -288,25 +358,20 @@ export class VoiceChatService {
 	}
 
 	/**
-	 * Clear model cache
-	 */
-	async clearCache(): Promise<void> {
-		await this.whisper.clearCache();
-		this.isInitialized = false;
-
-		if (this.config.showNotices) {
-			new Notice('Voice model cache cleared');
-		}
-	}
-
-	/**
 	 * Destroy the service
 	 */
 	destroy(): void {
-		this.recorder.destroy();
-		this.whisper.destroy();
+		if (this.localWhisper) {
+			this.localWhisper.destroy();
+			this.localWhisper = null;
+		}
+		if (this.openaiWhisper) {
+			this.openaiWhisper.destroy();
+			this.openaiWhisper = null;
+		}
 		this.listeners.clear();
 		this.isInitialized = false;
+		this.activeBackend = null;
 		this.state = 'idle';
 	}
 }

@@ -15,6 +15,8 @@ import { McpManager } from "./copilot/McpManager";
 import { AgentCache, CachedAgentInfo } from "./copilot/AgentCache";
 import { PromptCache, CachedPromptInfo } from "./copilot/PromptCache";
 import { CustomPrompt } from "./copilot/CustomizationLoader";
+import { OpenAIService } from "./copilot/OpenAIService";
+import { AIProviderType } from "./copilot/AIProvider";
 
 /**
  * Session info returned by the API
@@ -193,11 +195,32 @@ export interface VaultCopilotAPI {
 export default class CopilotPlugin extends Plugin {
 	settings: CopilotPluginSettings;
 	copilotService: CopilotService | null = null;
+	openaiService: OpenAIService | null = null;
 	skillRegistry: SkillRegistry;
 	agentCache: AgentCache;
 	promptCache: PromptCache;
 	mcpManager: McpManager;
 	private statusBarEl: HTMLElement | null = null;
+
+	/**
+	 * Get the currently active AI service based on settings
+	 */
+	getActiveService(): CopilotService | OpenAIService | null {
+		if (this.settings.aiProvider === "openai") {
+			return this.openaiService;
+		}
+		return this.copilotService;
+	}
+
+	/**
+	 * Check if any service is connected
+	 */
+	isAnyServiceConnected(): boolean {
+		if (this.settings.aiProvider === "openai") {
+			return this.openaiService?.isReady() ?? false;
+		}
+		return this.copilotService?.isConnected() ?? false;
+	}
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -385,28 +408,65 @@ export default class CopilotPlugin extends Plugin {
 	}
 
 	async connectCopilot(): Promise<void> {
-		if (!this.copilotService) {
-			this.copilotService = new CopilotService(this.app, this.getServiceConfig());
-		}
+		const provider = this.settings.aiProvider;
+		
+		if (provider === "openai") {
+			// Connect to OpenAI
+			if (!this.openaiService) {
+				this.openaiService = new OpenAIService(this.app, {
+					provider: "openai",
+					model: this.settings.openai.model,
+					streaming: this.settings.streaming,
+					apiKey: this.settings.openai.apiKey || undefined,
+					baseURL: this.settings.openai.baseURL || undefined,
+					organization: this.settings.openai.organization || undefined,
+					maxTokens: this.settings.openai.maxTokens,
+					temperature: this.settings.openai.temperature,
+				});
+			}
 
-		try {
-			await this.copilotService.start();
-			this.updateStatusBar();
-			new Notice("Connected to GitHub Copilot");
-		} catch (error) {
-			new Notice(`Failed to connect to Copilot: ${error}`);
+			try {
+				await this.openaiService.initialize();
+				this.updateStatusBar();
+				new Notice("Connected to OpenAI");
+			} catch (error) {
+				new Notice(`Failed to connect to OpenAI: ${error}`);
+			}
+		} else {
+			// Connect to GitHub Copilot
+			if (!this.copilotService) {
+				this.copilotService = new CopilotService(this.app, this.getServiceConfig());
+			}
+
+			try {
+				await this.copilotService.start();
+				this.updateStatusBar();
+				new Notice("Connected to GitHub Copilot");
+			} catch (error) {
+				new Notice(`Failed to connect to Copilot: ${error}`);
+			}
 		}
 	}
 
 	async disconnectCopilot(): Promise<void> {
+		// Disconnect both services
 		if (this.copilotService) {
 			try {
 				await this.copilotService.stop();
-				this.updateStatusBar();
 			} catch (error) {
 				console.error("Error disconnecting Copilot:", error);
 			}
 		}
+		
+		if (this.openaiService) {
+			try {
+				await this.openaiService.destroy();
+			} catch (error) {
+				console.error("Error disconnecting OpenAI:", error);
+			}
+		}
+		
+		this.updateStatusBar();
 	}
 
 	updateStatusBar(): void {
@@ -428,15 +488,22 @@ export default class CopilotPlugin extends Plugin {
 			return;
 		}
 
-		const isConnected = this.copilotService?.isConnected() ?? false;
+		const isConnected = this.isAnyServiceConnected();
+		const providerName = this.settings.aiProvider === "openai" ? "OpenAI" : "Copilot";
 		this.statusBarEl.empty();
 		
 		const statusEl = this.statusBarEl.createSpan({ cls: "vc-status" });
-		statusEl.setAttribute("aria-label", isConnected ? "Toggle Vault Copilot window" : "Connect to Vault Copilot");
+		statusEl.setAttribute("aria-label", isConnected ? "Toggle Vault Copilot window" : `Connect to ${providerName}`);
 		
-		// GitHub Copilot logo SVG
+		// Provider logo SVG
 		const logoEl = statusEl.createSpan({ cls: "vc-status-logo" });
-		logoEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M7.25 2.5h1.5a4.75 4.75 0 0 1 4.75 4.75v.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-.5a3.25 3.25 0 0 0-3.25-3.25h-1.5a3.25 3.25 0 0 0-3.25 3.25v.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-.5A4.75 4.75 0 0 1 7.25 2.5zm-3 4.25a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zm5.5 0a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zM2 11.5c0-.83.67-1.5 1.5-1.5h9c.83 0 1.5.67 1.5 1.5v1c0 .83-.67 1.5-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1c0 .28.22.5.5.5h9a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-9z"/></svg>`;
+		if (this.settings.aiProvider === "openai") {
+			// OpenAI logo
+			logoEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"/></svg>`;
+		} else {
+			// GitHub Copilot logo
+			logoEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M7.25 2.5h1.5a4.75 4.75 0 0 1 4.75 4.75v.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-.5a3.25 3.25 0 0 0-3.25-3.25h-1.5a3.25 3.25 0 0 0-3.25 3.25v.5a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1-.75-.75v-.5A4.75 4.75 0 0 1 7.25 2.5zm-3 4.25a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zm5.5 0a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zM2 11.5c0-.83.67-1.5 1.5-1.5h9c.83 0 1.5.67 1.5 1.5v1c0 .83-.67 1.5-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1c0 .28.22.5.5.5h9a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-9z"/></svg>`;
+		}
 		
 		// Connection status indicator
 		statusEl.createSpan({ 
@@ -458,7 +525,7 @@ export default class CopilotPlugin extends Plugin {
 			// View doesn't exist - open it
 			this.activateChatView();
 			// Auto-connect if not connected
-			if (!this.copilotService?.isConnected()) {
+			if (!this.isAnyServiceConnected()) {
 				this.connectCopilot();
 			}
 		}
@@ -493,7 +560,8 @@ export default class CopilotPlugin extends Plugin {
 	 * Usage: const vc = (app as any).plugins.plugins['obsidian-vault-copilot']?.api;
 	 */
 	get api(): VaultCopilotAPI {
-		const service = this.copilotService;
+		// Note: copilotService handles note operations, while chat can use either provider
+		const copilotService = this.copilotService;
 		const plugin = this;
 		
 		// Helper to convert CopilotSession to SessionInfo
@@ -509,7 +577,7 @@ export default class CopilotPlugin extends Plugin {
 		});
 		
 		return {
-			isConnected: () => service?.isConnected() ?? false,
+			isConnected: () => plugin.isAnyServiceConnected(),
 			
 			connect: async () => {
 				await plugin.connectCopilot();
@@ -520,22 +588,48 @@ export default class CopilotPlugin extends Plugin {
 			},
 			
 			sendMessage: async (prompt: string) => {
-				if (!service) throw new Error("VaultCopilot service not initialized");
-				if (!service.isConnected()) await plugin.connectCopilot();
-				return await service.sendMessage(prompt);
+				// Use the active provider for chat
+				if (plugin.settings.aiProvider === "openai") {
+					if (!plugin.openaiService) throw new Error("OpenAI service not initialized");
+					if (!plugin.openaiService.isReady()) await plugin.connectCopilot();
+					return await plugin.openaiService.sendMessage(prompt);
+				} else {
+					if (!copilotService) throw new Error("VaultCopilot service not initialized");
+					if (!copilotService.isConnected()) await plugin.connectCopilot();
+					return await copilotService.sendMessage(prompt);
+				}
 			},
 			
 			sendMessageStreaming: async (prompt, onDelta, onComplete) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				if (!service.isConnected()) await plugin.connectCopilot();
-				return await service.sendMessageStreaming(prompt, onDelta, onComplete);
+				// Use the active provider for chat
+				if (plugin.settings.aiProvider === "openai") {
+					if (!plugin.openaiService) throw new Error("OpenAI service not initialized");
+					if (!plugin.openaiService.isReady()) await plugin.connectCopilot();
+					return await plugin.openaiService.sendMessageStreaming(prompt, {
+						onDelta,
+						onComplete,
+					});
+				} else {
+					if (!copilotService) throw new Error("Vault Copilot service not initialized");
+					if (!copilotService.isConnected()) await plugin.connectCopilot();
+					return await copilotService.sendMessageStreaming(prompt, onDelta, onComplete);
+				}
 			},
 			
-			getMessageHistory: () => service?.getMessageHistory() ?? [],
+			getMessageHistory: () => {
+				if (plugin.settings.aiProvider === "openai" && plugin.openaiService) {
+					return plugin.openaiService.getMessageHistory();
+				}
+				return copilotService?.getMessageHistory() ?? [];
+			},
 			
 			clearHistory: async () => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.clearHistory();
+				if (plugin.settings.aiProvider === "openai" && plugin.openaiService) {
+					plugin.openaiService.clearHistory();
+					return;
+				}
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.clearHistory();
 			},
 			
 			// ===== Session Management =====
@@ -562,8 +656,8 @@ export default class CopilotPlugin extends Plugin {
 				plugin.settings.activeSessionId = newSession.id;
 				await plugin.saveSettings();
 				
-				if (service) {
-					await service.createSession();
+				if (copilotService) {
+					await copilotService.createSession();
 				}
 				
 				return toSessionInfo(newSession);
@@ -629,63 +723,63 @@ export default class CopilotPlugin extends Plugin {
 			// ===== Note Operations =====
 			
 			readNote: async (path) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.readNote(path);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.readNote(path);
 			},
 			
 			searchNotes: async (query, limit = 10) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.searchNotes(query, limit);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.searchNotes(query, limit);
 			},
 			
 			createNote: async (path, content) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.createNote(path, content);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.createNote(path, content);
 			},
 			
 			getActiveNote: async () => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.getActiveNote();
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.getActiveNote();
 			},
 			
 			listNotes: async (folder) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.listNotes(folder);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.listNotes(folder);
 			},
 			
 			appendToNote: async (path, content) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.appendToNote(path, content);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.appendToNote(path, content);
 			},
 			
 			batchReadNotes: async (paths) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.batchReadNotes(paths);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.batchReadNotes(paths);
 			},
 			
 			updateNote: async (path, content) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.updateNote(path, content);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.updateNote(path, content);
 			},
 			
 			deleteNote: async (path) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.deleteNote(path);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.deleteNote(path);
 			},
 			
 			getRecentChanges: async (limit = 10) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.getRecentChanges(limit);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.getRecentChanges(limit);
 			},
 			
 			getDailyNote: async (date) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.getDailyNote(date);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.getDailyNote(date);
 			},
 			
 			renameNote: async (oldPath, newPath) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				return await service.renameNote(oldPath, newPath);
+				if (!copilotService) throw new Error("Vault Copilot service not initialized");
+				return await copilotService.renameNote(oldPath, newPath);
 			},
 			
 			// ===== Skill Registration =====
@@ -759,8 +853,16 @@ export default class CopilotPlugin extends Plugin {
 			},
 			
 			executePrompt: async (name: string, variables?: Record<string, string>) => {
-				if (!service) throw new Error("Vault Copilot service not initialized");
-				if (!service.isConnected()) await plugin.connectCopilot();
+				// Use the active provider for chat
+				const isOpenAI = plugin.settings.aiProvider === "openai";
+				
+				if (isOpenAI) {
+					if (!plugin.openaiService) throw new Error("OpenAI service not initialized");
+					if (!plugin.openaiService.isReady()) await plugin.connectCopilot();
+				} else {
+					if (!copilotService) throw new Error("Vault Copilot service not initialized");
+					if (!copilotService.isConnected()) await plugin.connectCopilot();
+				}
 				
 				const prompt = await plugin.promptCache.getFullPrompt(name);
 				if (!prompt) throw new Error(`Prompt not found: ${name}`);
@@ -773,7 +875,11 @@ export default class CopilotPlugin extends Plugin {
 					}
 				}
 				
-				return await service.sendMessage(content);
+				if (isOpenAI) {
+					return await plugin.openaiService!.sendMessage(content);
+				} else {
+					return await copilotService!.sendMessage(content);
+				}
 			},
 		};
 	}
