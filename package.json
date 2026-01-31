@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"obsidian": "latest",
-		"@github/copilot-sdk": "latest"
+		"@github/copilot-sdk": "latest",
+		"@timur00kh/whisper.wasm": "canary"
 	}
 }
